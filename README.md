@@ -1,20 +1,29 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Focus Matrix
 
-# Run and deploy your AI Studio app
+![Focus Matrix Screenshot](./screenshot.png)
 
-This contains everything you need to run your app locally.
+Focus Matrix is a productivity web application that helps you prioritize tasks using the Eisenhower Matrix. Drag and drop tasks between quadrants to easily organize your day. 
 
-View your app in AI Studio: https://ai.studio/apps/61ca2680-2352-476b-a70e-7fdf87e54e59
+## Features
+- **Four Quadrants:** Do First, Schedule, Delegate, and Don't Do.
+- **Drag & Drop:** Easily move tasks between quadrants.
+- **Archive:** Keep track of completed tasks grouped by date.
+- **Dark Mode:** Easy on the eyes with a tailored dark theme.
+- **Responsive:** Works seamlessly on both desktop and mobile screens.
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
+## Getting Started
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+
+2. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Build for production:
+   ```bash
+   npm run build
+   ```
