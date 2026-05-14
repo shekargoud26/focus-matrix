@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+
+  --color-q1: #FCA5A5; /* Muted Coral */
+  --color-q2: #A7F3D0; /* Sage Green */
+  --color-q3: #FDE68A; /* Dusty Mustard */
+  --color-q4: #BFDBFE; /* Slate Blue */
+
+  --color-q1-text: #dc2626; /* Darker coral/red */
+  --color-q2-text: #059669; /* Darker sage/emerald */
+  --color-q3-text: #d97706; /* Darker mustard/amber */
+  --color-q4-text: #2563eb; /* Darker blue */
+
+  --color-q1-bg: rgba(254, 226, 226, 0.4); /* Light red tint */
+  --color-q2-bg: rgba(209, 250, 229, 0.4); /* Light emerald tint */
+  --color-q3-bg: rgba(254, 243, 199, 0.4); /* Light amber tint */
+  --color-q4-bg: rgba(219, 234, 254, 0.4); /* Light blue tint */
+  
+  --color-app-bg: #f8fafc;
+  --color-app-text: #0f172a;
+  --color-card-bg: rgba(255, 255, 255, 0.4);
+  --color-card-border: rgba(226, 232, 240, 0.6);
+}
+
+.dark {
+  --color-q1: #f87171; /* Vibrant but desaturated coral */
+  --color-q2: #4ade80; /* Vibrant but desaturated sage */
+  --color-q3: #fbbf24; /* Vibrant but desaturated mustard */
+  --color-q4: #60a5fa; /* Vibrant but desaturated blue */
+
+  --color-q1-text: #f87171; 
+  --color-q2-text: #4ade80; 
+  --color-q3-text: #fbbf24; 
+  --color-q4-text: #60a5fa; 
+
+  --color-q1-bg: rgba(127, 29, 29, 0.2); 
+  --color-q2-bg: rgba(6, 78, 59, 0.2); 
+  --color-q3-bg: rgba(120, 53, 15, 0.2);
+  --color-q4-bg: rgba(30, 58, 138, 0.2);
+  
+  --color-app-bg: #020617;
+  --color-app-text: #f8fafc;
+  --color-card-bg: rgba(15, 23, 42, 0.6);
+  --color-card-border: rgba(51, 65, 85, 0.5);
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  body {
+    @apply font-sans antialiased bg-app-bg text-app-text;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}

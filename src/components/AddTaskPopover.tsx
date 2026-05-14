@@ -1,0 +1,78 @@
+import React, { useState, useRef, useEffect } from 'react';
+import * as Popover from '@radix-ui/react-popover';
+import { Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+
+interface Props {
+  onAdd: (title: string, desc: string) => void;
+  children: React.ReactNode;
+}
+
+export default function AddTaskPopover({ onAdd, children }: Props) {
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+    onAdd(title.trim(), desc.trim());
+    setTitle('');
+    setDesc('');
+    setOpen(false);
+  };
+
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
+        {children}
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          side="bottom"
+          align="end"
+          sideOffset={8}
+          className="z-50 w-72 bg-app-bg p-4 rounded-xl shadow-2xl border border-card-border outline-none"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.15 }}
+          >
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
+                <input
+                  autoFocus
+                  placeholder="Task title..."
+                  className="w-full bg-transparent border border-transparent text-sm font-semibold focus:outline-none focus:ring-0 px-2 py-1.5 -ml-2 rounded-md text-slate-900 dark:text-white placeholder:text-slate-400"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+              <div>
+                <textarea
+                  placeholder="Description (optional)"
+                  className="w-full bg-transparent border border-transparent text-xs focus:outline-none focus:ring-0 px-2 py-1.5 -ml-2 rounded-md text-slate-500 dark:text-slate-400 resize-none placeholder:text-slate-400/60"
+                  rows={2}
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="submit"
+                  disabled={!title.trim()}
+                  className="px-3 py-1.5 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white text-xs font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  Add Task
+                </button>
+              </div>
+            </form>
+          </motion.div>
+          <Popover.Arrow className="fill-white dark:fill-slate-900" />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
