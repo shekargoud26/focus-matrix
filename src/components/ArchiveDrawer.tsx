@@ -43,7 +43,7 @@ export default function ArchiveDrawer({ isOpen, onClose, tasks, onDelete, onRest
               <Archive size={20} className="text-slate-400" />
               <Dialog.Title className="text-xl font-bold tracking-tight">Archive</Dialog.Title>
             </div>
-            <Dialog.Close className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full transition-colors">
+            <Dialog.Close className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900">
               <X size={20} />
             </Dialog.Close>
           </div>
@@ -91,14 +91,14 @@ export default function ArchiveDrawer({ isOpen, onClose, tasks, onDelete, onRest
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => onRestore(task.id)}
-                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg text-slate-500 transition-colors"
+                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg text-slate-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                             title="Restore"
                           >
                             <RotateCcw size={16} />
                           </button>
                           <button
                             onClick={() => onDelete(task.id)}
-                            className="p-2 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg text-rose-500 transition-colors"
+                            className="p-2 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg text-rose-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50"
                             title="Delete permanently"
                           >
                             <Trash2 size={16} />

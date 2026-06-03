@@ -6,13 +6,27 @@ import { motion, AnimatePresence } from 'motion/react';
 interface Props {
   onAdd: (title: string, desc: string) => void;
   children: React.ReactNode;
+  shortcutKey?: string;
 }
 
-export default function AddTaskPopover({ onAdd, children }: Props) {
+export default function AddTaskPopover({ onAdd, children, shortcutKey }: Props) {
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!shortcutKey) return;
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Use e.code to ignore layout-specific characters produced by Alt on macOS
+      if (e.altKey && e.code === `Digit${shortcutKey}`) {
+        e.preventDefault();
+        setOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [shortcutKey]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +35,15 @@ export default function AddTaskPopover({ onAdd, children }: Props) {
     setTitle('');
     setDesc('');
     setOpen(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      if (title.trim()) {
+        handleSubmit(e as unknown as React.FormEvent);
+      }
+    }
   };
 
   return (
@@ -48,6 +71,7 @@ export default function AddTaskPopover({ onAdd, children }: Props) {
                   className="w-full bg-transparent border border-transparent text-sm font-semibold focus:outline-none focus:ring-0 px-2 py-1.5 -ml-2 rounded-md text-slate-900 dark:text-white placeholder:text-slate-400"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
               <div>
@@ -57,13 +81,14 @@ export default function AddTaskPopover({ onAdd, children }: Props) {
                   rows={2}
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
               <div className="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="submit"
                   disabled={!title.trim()}
-                  className="px-3 py-1.5 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white text-xs font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="px-3 py-1.5 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white text-xs font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
                 >
                   Add Task
                 </button>

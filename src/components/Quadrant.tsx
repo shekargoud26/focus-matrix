@@ -30,6 +30,13 @@ const quadrantHeaderColors: Record<QuadrantId, string> = {
   q4: 'text-q4-text',
 };
 
+const quadrantRingColors: Record<QuadrantId, string> = {
+  q1: 'focus-visible:ring-q1/50',
+  q2: 'focus-visible:ring-q2/50',
+  q3: 'focus-visible:ring-q3/50',
+  q4: 'focus-visible:ring-q4/50',
+};
+
 export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelete }: Props) {
   const { setNodeRef } = useDroppable({ id: quadrant.id });
 
@@ -51,8 +58,17 @@ export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelet
             {quadrant.subtitle}
           </span>
         </div>
-        <AddTaskPopover onAdd={(title, desc) => onAddTask(quadrant.id, title, desc)}>
-          <button className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-all duration-200">
+        <AddTaskPopover 
+          onAdd={(title, desc) => onAddTask(quadrant.id, title, desc)}
+          shortcutKey={quadrant.id.replace('q', '')}
+        >
+          <button 
+            title={`Add task (Alt+${quadrant.id.replace('q', '')})`}
+            className={cn(
+              "p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-all duration-200 focus:outline-none focus-visible:ring-2",
+              quadrantRingColors[quadrant.id]
+            )}
+          >
             <Plus size={18} />
           </button>
         </AddTaskPopover>

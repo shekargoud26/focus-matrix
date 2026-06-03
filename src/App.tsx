@@ -18,7 +18,7 @@ import { Task, QuadrantId, QUADRANTS } from './types';
 import Quadrant from './components/Quadrant';
 import TaskTicket from './components/TaskTicket';
 import ArchiveDrawer from './components/ArchiveDrawer';
-import { Moon, Sun, Archive, CheckCircle2 } from 'lucide-react';
+import { Moon, Sun, Archive, Grid2X2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
@@ -157,10 +157,10 @@ export default function App() {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="flex items-center gap-3"
           >
-            <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center">
-              <CheckCircle2 size={18} className="text-white dark:text-slate-900" />
+            <div className="flex items-center justify-center">
+              <Grid2X2 strokeWidth={2.5} size={22} className="text-slate-800 dark:text-slate-100" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-app-text">
+            <h1 className="text-xl font-extrabold tracking-tight text-app-text">
               Focus Matrix
             </h1>
           </motion.div>
@@ -173,7 +173,7 @@ export default function App() {
           >
             <button
               onClick={() => setIsArchiveOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 group"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
             >
               <Archive size={16} className="text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
               <span className="text-sm font-semibold hidden sm:inline">Archive</span>
@@ -185,7 +185,7 @@ export default function App() {
             </button>
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 group"
+              className="p-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
               aria-label="Toggle dark mode"
             >
               {isDarkMode ? (

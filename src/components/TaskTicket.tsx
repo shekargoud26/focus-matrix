@@ -21,6 +21,13 @@ const quadrantColors: Record<QuadrantId, string> = {
   q4: 'border-l-q4 bg-q4/10',
 };
 
+const quadrantRingColors: Record<QuadrantId, string> = {
+  q1: 'focus-visible:ring-q1/50',
+  q2: 'focus-visible:ring-q2/50',
+  q3: 'focus-visible:ring-q3/50',
+  q4: 'focus-visible:ring-q4/50',
+};
+
 export default function TaskTicket({ task, isOverlay, onToggle, onDelete }: Props) {
   const {
     attributes,
@@ -43,8 +50,9 @@ export default function TaskTicket({ task, isOverlay, onToggle, onDelete }: Prop
       {...attributes}
       {...listeners}
       className={cn(
-        "group relative bg-white dark:bg-slate-800/80 border-l-4 rounded-r-xl shadow-sm p-3 transition-all duration-200 cursor-grab active:cursor-grabbing",
+        "group relative bg-white dark:bg-slate-800/80 border-l-4 rounded-r-xl shadow-sm p-3 transition-all duration-200 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900",
         quadrantColors[task.quadrantId],
+        quadrantRingColors[task.quadrantId],
         isDragging && "opacity-30",
         isOverlay && "shadow-2xl scale-[1.02] rotate-1 z-50",
         !isOverlay && "hover:shadow-md hover:-translate-y-0.5"
@@ -72,14 +80,14 @@ export default function TaskTicket({ task, isOverlay, onToggle, onDelete }: Prop
         </div>
 
         {!isOverlay && (
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-auto">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200 pointer-events-auto">
             <button
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
                 onToggle?.(task.id);
               }}
-              className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
+              className="p-1 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
               title="Complete"
             >
               <CheckCircle2 size={16} />
@@ -90,7 +98,7 @@ export default function TaskTicket({ task, isOverlay, onToggle, onDelete }: Prop
                 e.stopPropagation();
                 onDelete?.(task.id);
               }}
-              className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md transition-colors"
+              className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/50"
               title="Delete"
             >
               <Trash2 size={16} />
