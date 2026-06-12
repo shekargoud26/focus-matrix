@@ -80,6 +80,12 @@ export default function App() {
     ));
   };
 
+  const editTask = (id: string, title: string, description: string) => {
+    setTasks(prev => prev.map((t) => 
+      t.id === id ? { ...t, title, description } : t
+    ));
+  };
+
   const deleteTask = (id: string) => {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
@@ -221,6 +227,7 @@ export default function App() {
                     onAddTask={addTask}
                     onToggle={toggleTask}
                     onDelete={deleteTask}
+                    onEdit={editTask}
                   />
                 </motion.div>
               ))}

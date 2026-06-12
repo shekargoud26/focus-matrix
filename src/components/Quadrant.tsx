@@ -14,6 +14,7 @@ interface Props {
   onAddTask: (qId: QuadrantId, title: string, desc: string) => void;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit?: (id: string, title: string, desc: string) => void;
 }
 
 const quadrantBackgrounds: Record<QuadrantId, string> = {
@@ -21,6 +22,13 @@ const quadrantBackgrounds: Record<QuadrantId, string> = {
   q2: 'bg-q2-bg',
   q3: 'bg-q3-bg',
   q4: 'bg-q4-bg',
+};
+
+const quadrantEmptyStates: Record<QuadrantId, string> = {
+  q1: 'Add tasks that are urgent and important to tackle immediately.',
+  q2: 'Add tasks that require planning but aren\'t urgent.',
+  q3: 'Add tasks that are urgent but can be done by someone else.',
+  q4: 'Identify tasks that are neither urgent nor important to avoid.',
 };
 
 const quadrantHeaderColors: Record<QuadrantId, string> = {
@@ -37,7 +45,7 @@ const quadrantRingColors: Record<QuadrantId, string> = {
   q4: 'focus-visible:ring-q4/50',
 };
 
-export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelete }: Props) {
+export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelete, onEdit }: Props) {
   const { setNodeRef } = useDroppable({ id: quadrant.id });
 
   return (
@@ -79,7 +87,7 @@ export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelet
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {tasks.map((task) => (
-              <TaskTicket key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} />
+              <TaskTicket key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />
             ))}
           </div>
         </SortableContext>
@@ -94,7 +102,7 @@ export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelet
               <Plus className="text-slate-300 dark:text-slate-600" size={20} />
             </div>
             <p className="text-slate-400 dark:text-slate-500 text-xs font-medium">
-              No tasks in this quadrant.<br/>Great job staying focused!
+              {quadrantEmptyStates[quadrant.id]}
             </p>
           </motion.div>
         )}

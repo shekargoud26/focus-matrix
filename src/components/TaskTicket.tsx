@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Task, QuadrantId } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, Trash2, GripVertical } from 'lucide-react';
+import { CheckCircle2, Trash2, GripVertical, Edit2, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
   isOverlay?: boolean;
   onToggle?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onEdit?: (id: string, title: string, desc: string) => void;
 }
 
 const quadrantColors: Record<QuadrantId, string> = {
@@ -28,7 +29,12 @@ const quadrantRingColors: Record<QuadrantId, string> = {
   q4: 'focus-visible:ring-q4/50',
 };
 
-export default function TaskTicket({ task, isOverlay, onToggle, onDelete }: Props) {
+export default function TaskTicket({ task, isOverlay, onToggle, onDelete, onEdit }: Props) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(task.title);
+  const [editDesc, setEditDesc] = useState(task.description || '');
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
   const {
     attributes,
     listeners,
@@ -43,12 +49,79 @@ export default function TaskTicket({ task, isOverlay, onToggle, onDelete }: Prop
     transition,
   };
 
+  useEffect(() => {
+    if (isEditing && titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, [isEditing]);
+
+  const handleSave = () => {
+    if (editTitle.trim() && onEdit) {
+      onEdit(task.id, editTitle.trim(), editDesc.trim());
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handleSave();
+    } else if (e.key === 'Escape') {
+      setIsEditing(false);
+      setEditTitle(task.title);
+      setEditDesc(task.description || '');
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <div className={cn(
+        "bg-white dark:bg-slate-800 border-l-4 rounded-r-xl shadow-lg ring-1 ring-slate-200/50 dark:ring-slate-700/50 p-3 z-10 relative transition-all duration-200",
+        quadrantColors[task.quadrantId]
+      )}>
+        <input
+          ref={titleInputRef}
+          className="w-full bg-transparent border-0 text-sm font-semibold focus:outline-none focus:ring-0 px-1 py-1 mb-1 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-900 dark:text-white"
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Task title"
+        />
+        <textarea
+          className="w-full bg-transparent border-0 text-xs resize-none focus:outline-none focus:ring-0 px-1 py-1 mb-3 min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-600 dark:text-slate-400"
+          value={editDesc}
+          onChange={(e) => setEditDesc(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Description (optional)"
+        />
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setIsEditing(false)}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!editTitle.trim()}
+            className="px-3 py-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100"
+          >
+            Save Task
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
+      onDoubleClick={() => {
+        if (!isOverlay && !task.completed) setIsEditing(true);
+      }}
       className={cn(
         "group relative bg-white dark:bg-slate-800/80 border-l-4 rounded-r-xl shadow-sm p-3 transition-all duration-200 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900",
         quadrantColors[task.quadrantId],
@@ -81,6 +154,19 @@ export default function TaskTicket({ task, isOverlay, onToggle, onDelete }: Prop
 
         {!isOverlay && (
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200 pointer-events-auto">
+            {!task.completed && (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditing(true);
+                }}
+                className="p-1 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                title="Edit"
+              >
+                <Edit2 size={16} />
+              </button>
+            )}
             <button
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
