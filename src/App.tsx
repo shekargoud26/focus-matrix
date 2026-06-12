@@ -59,7 +59,15 @@ export default function App() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const activeTasks = useMemo(() => tasks.filter(t => !t.completed), [tasks]);
+  const activeTasks = useMemo(() => {
+    return [...tasks]
+      .filter(t => !t.completed)
+      .sort((a, b) => {
+        if (a.starred && !b.starred) return -1;
+        if (!a.starred && b.starred) return 1;
+        return 0;
+      });
+  }, [tasks]);
   const archivedTasks = useMemo(() => tasks.filter(t => t.completed).sort((a, b) => b.createdAt - a.createdAt), [tasks]);
 
   const addTask = (quadrantId: QuadrantId, title: string, description: string) => {
@@ -70,6 +78,7 @@ export default function App() {
       quadrantId,
       completed: false,
       createdAt: Date.now(),
+      starred: false,
     };
     setTasks(prev => [newTask, ...prev]);
   };
@@ -77,6 +86,12 @@ export default function App() {
   const toggleTask = (id: string) => {
     setTasks(prev => prev.map(t => 
       t.id === id ? { ...t, completed: !t.completed, closedAt: !t.completed ? Date.now() : undefined } : t
+    ));
+  };
+
+  const toggleStar = (id: string) => {
+    setTasks(prev => prev.map(t => 
+      t.id === id ? { ...t, starred: !t.starred } : t
     ));
   };
 
@@ -228,6 +243,7 @@ export default function App() {
                     onToggle={toggleTask}
                     onDelete={deleteTask}
                     onEdit={editTask}
+                    onToggleStar={toggleStar}
                   />
                 </motion.div>
               ))}

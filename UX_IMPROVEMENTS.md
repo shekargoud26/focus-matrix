@@ -32,7 +32,7 @@ This document contains recommendations from a Senior Product Designer for improv
 
 *These are "low-hanging fruit" features that offer high value to the user with reasonable development effort.*
 
-- [ ] **Feature: Sub-Prioritization (Starred Tasks)**
+- [x] **Feature: Sub-Prioritization (Starred Tasks)**
   - **The User Problem It Solves:** Within the "Do First" quadrant, users might have 5 tasks. Which one is *the most* important?
   - **The Impact:** Gives users micro-control over their immediate focus, improving task execution and reducing decision fatigue.
   - **Action:** Add a small star/flag icon to task cards that pins them to the top of their respective quadrant.
@@ -47,20 +47,27 @@ This document contains recommendations from a Senior Product Designer for improv
   - **The Impact:** Reduces manual repetitive clicking, making the transition between planning sessions seamless.
   - **Action:** Add an ellipsis or "Clear All" button in the header of each quadrant (perhaps hidden under a small dropdown menu to prevent accidental clicks).
 
+- [ ] **Feature: Global Inbox (Sidebar Integrable)**
+  - **The User Problem It Solves:** Users need a place to quickly capture tasks without having to decide immediately which matrix (Work, Personal) or quadrant they belong to.
+  - **The Impact:** Reduces cognitive friction during task capture. It will serve as a foundational piece for the upcoming left sidebar multi-matrix architecture.
+  - **Action:** 
+    - *Phase 1 (Current view):* Create an unbound "Inbox" container (e.g., a slide-over panel or expandable tray) for rapidly capturing unassigned tasks. Introduce drag-and-drop from the Inbox into the main quadrants.
+    - *Phase 2 (With Sidebar):* Move the Inbox to the top of the new left sidebar, acting as the universal capture zone across all custom matrices.
+
 ---
 
 ## 3. Visual & Hierarchy Adjustments
 
 *Tactical feedback on layout, typography, contrast, and information architecture.*
 
-- [ ] **Task Count Metrics**
+- [x] **Task Count Metrics**
   - **Improvement:** Add a small task counter badge next to the quadrant title (e.g., "Do First (3)"). This provides instant situational awareness of workload distribution.
 
 - [ ] **Enhance Drag & Drop Affordance**
   - **Improvement:** While the cursor changes, the visual connection during drag and drop can be improved. Introduce a placeholder block (a dashed outline) in the destination quadrant to clearly show where the task will land.
 
-- [ ] **Refine the Task Input Form Alignment**
+- [x] **Refine the Task Input Form Alignment**
   - **Improvement:** Ensure the Add Task popover's input fields support seamless keyboard navigation (Focus trapping, Tab indexing). Ensure the styling of the inputs precisely matches the design language of the cards.
 
-- [ ] **Visual Distinction of Quadrants**
+- [x] **Visual Distinction of Quadrants**
   - **Improvement:** While quadrants have subtle background colors, the titles could use a stronger visual anchor. Consider adding a small accompanying icon next to each quadrant title (e.g., Zap for Do First, Calendar for Schedule, Users for Delegate, X-Circle for Eliminate) to strengthen visual scanning.

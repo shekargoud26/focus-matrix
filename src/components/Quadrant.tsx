@@ -4,7 +4,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Task, QuadrantDef, QuadrantId } from '../types';
 import TaskTicket from './TaskTicket';
 import AddTaskPopover from './AddTaskPopover';
-import { Plus } from 'lucide-react';
+import { Plus, Zap, CalendarDays, Users, XCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion } from 'motion/react';
 
@@ -15,6 +15,7 @@ interface Props {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit?: (id: string, title: string, desc: string) => void;
+  onToggleStar?: (id: string) => void;
 }
 
 const quadrantBackgrounds: Record<QuadrantId, string> = {
@@ -38,6 +39,20 @@ const quadrantHeaderColors: Record<QuadrantId, string> = {
   q4: 'text-q4-text',
 };
 
+const quadrantBadgeStyles: Record<QuadrantId, string> = {
+  q1: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
+  q2: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
+  q3: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+  q4: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+};
+
+const QuadrantIcons: Record<QuadrantId, React.ElementType> = {
+  q1: Zap,
+  q2: CalendarDays,
+  q3: Users,
+  q4: XCircle,
+};
+
 const quadrantRingColors: Record<QuadrantId, string> = {
   q1: 'focus-visible:ring-q1/50',
   q2: 'focus-visible:ring-q2/50',
@@ -45,8 +60,10 @@ const quadrantRingColors: Record<QuadrantId, string> = {
   q4: 'focus-visible:ring-q4/50',
 };
 
-export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelete, onEdit }: Props) {
+export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelete, onEdit, onToggleStar }: Props) {
   const { setNodeRef } = useDroppable({ id: quadrant.id });
+  
+  const Icon = QuadrantIcons[quadrant.id];
 
   return (
     <div
@@ -59,10 +76,16 @@ export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelet
       {/* Header */}
       <div className="p-4 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/50">
         <div>
-          <h3 className={cn("font-bold text-base leading-tight", quadrantHeaderColors[quadrant.id])}>
+          <h3 className={cn("font-bold text-base leading-tight flex items-center gap-2", quadrantHeaderColors[quadrant.id])}>
+            <Icon size={18} className="shrink-0" />
             {quadrant.title}
+            {tasks.length > 0 && (
+              <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", quadrantBadgeStyles[quadrant.id])}>
+                {tasks.length}
+              </span>
+            )}
           </h3>
-          <span className="text-[10px] text-slate-500 dark:text-slate-300 uppercase tracking-widest font-medium opacity-80">
+          <span className="text-[10px] text-slate-500 dark:text-slate-300 uppercase tracking-widest font-medium opacity-80 mt-1 block">
             {quadrant.subtitle}
           </span>
         </div>
@@ -87,7 +110,7 @@ export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelet
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {tasks.map((task) => (
-              <TaskTicket key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} />
+              <TaskTicket key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} onToggleStar={onToggleStar} />
             ))}
           </div>
         </SortableContext>

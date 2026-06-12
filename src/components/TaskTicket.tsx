@@ -3,7 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Task, QuadrantId } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, Trash2, GripVertical, Edit2, X } from 'lucide-react';
+import { CheckCircle2, Trash2, GripVertical, Edit2, X, Star } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
   onToggle?: (id: string) => void;
   onDelete?: (id: string) => void;
   onEdit?: (id: string, title: string, desc: string) => void;
+  onToggleStar?: (id: string) => void;
 }
 
 const quadrantColors: Record<QuadrantId, string> = {
@@ -29,7 +30,7 @@ const quadrantRingColors: Record<QuadrantId, string> = {
   q4: 'focus-visible:ring-q4/50',
 };
 
-export default function TaskTicket({ task, isOverlay, onToggle, onDelete, onEdit }: Props) {
+export default function TaskTicket({ task, isOverlay, onToggle, onDelete, onEdit, onToggleStar }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDesc, setEditDesc] = useState(task.description || '');
@@ -140,10 +141,11 @@ export default function TaskTicket({ task, isOverlay, onToggle, onDelete, onEdit
 
         <div className="flex-1 min-w-0">
           <h4 className={cn(
-            "font-semibold text-sm leading-tight truncate transition-all duration-300",
+            "font-semibold text-sm leading-tight truncate transition-all duration-300 flex items-center gap-1.5",
             task.completed && "line-through text-slate-400 opacity-60"
           )}>
-            {task.title}
+            {task.starred && <Star size={14} className="fill-amber-400 text-amber-400 shrink-0" />}
+            <span className="truncate">{task.title}</span>
           </h4>
           {task.description && (
             <p className="text-[11px] text-slate-500 dark:text-slate-300 mt-1 line-clamp-2 leading-relaxed">
@@ -153,19 +155,37 @@ export default function TaskTicket({ task, isOverlay, onToggle, onDelete, onEdit
         </div>
 
         {!isOverlay && (
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200 pointer-events-auto">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200 pointer-events-auto shrink-0">
             {!task.completed && (
-              <button
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsEditing(true);
-                }}
-                className="p-1 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                title="Edit"
-              >
-                <Edit2 size={16} />
-              </button>
+              <>
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleStar?.(task.id);
+                  }}
+                  className={cn(
+                    "p-1 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50",
+                    task.starred 
+                      ? "text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20" 
+                      : "text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                  )}
+                  title={task.starred ? "Unstar" : "Star"}
+                >
+                  <Star size={16} className={task.starred ? "fill-current" : ""} />
+                </button>
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditing(true);
+                  }}
+                  className="p-1 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                  title="Edit"
+                >
+                  <Edit2 size={16} />
+                </button>
+              </>
             )}
             <button
               onPointerDown={(e) => e.stopPropagation()}

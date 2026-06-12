@@ -8,6 +8,7 @@ export interface Task {
   completed: boolean;
   createdAt: number;
   closedAt?: number;
+  starred?: boolean;
 }
 
 export interface QuadrantDef {
