@@ -81,7 +81,7 @@ export default function ArchiveDrawer({ isOpen, onClose, tasks, onDelete, onRest
                               "text-[9px] uppercase font-bold tracking-widest",
                               quadrantTextColors[task.quadrantId] || "text-slate-400"
                             )}>
-                              {QUADRANTS.find(q => q.id === task.quadrantId)?.title}
+                              {task.quadrantId === 'inbox' ? 'Inbox' : QUADRANTS.find(q => q.id === task.quadrantId)?.title}
                             </span>
                             <span className="text-[9px] text-slate-300 dark:text-slate-600 font-medium">
                               {new Date(task.closedAt || task.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

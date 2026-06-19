@@ -18,7 +18,9 @@ import { Task, QuadrantId, QUADRANTS } from './types';
 import Quadrant from './components/Quadrant';
 import TaskTicket from './components/TaskTicket';
 import ArchiveDrawer from './components/ArchiveDrawer';
-import { Moon, Sun, Archive, Grid2X2 } from 'lucide-react';
+import InboxDrawer from './components/InboxDrawer';
+import InboxContent from './components/InboxContent';
+import { Moon, Sun, Archive, Grid2X2, Inbox } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
@@ -37,6 +39,7 @@ export default function App() {
     return false;
   });
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
+  const [isInboxOpen, setIsInboxOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('eisenhower-tasks', JSON.stringify(tasks));
@@ -95,6 +98,12 @@ export default function App() {
     ));
   };
 
+  const moveToQuadrant = (id: string, quadrantId: QuadrantId) => {
+    setTasks(prev => prev.map(t => 
+      t.id === id ? { ...t, quadrantId } : t
+    ));
+  };
+
   const editTask = (id: string, title: string, description: string) => {
     setTasks(prev => prev.map((t) => 
       t.id === id ? { ...t, title, description } : t
@@ -118,7 +127,7 @@ export default function App() {
     
     if (!activeTask) return;
 
-    const isOverAQuadrant = QUADRANTS.some(q => q.id === overId);
+    const isOverAQuadrant = QUADRANTS.some(q => q.id === overId) || overId === 'inbox';
     
     if (isOverAQuadrant && activeTask.quadrantId !== overId) {
       setTasks(prev => {
@@ -169,7 +178,7 @@ export default function App() {
         <div className="absolute -bottom-[10%] left-[20%] w-[30%] h-[30%] bg-q3/10 blur-[120px] rounded-full" />
       </div>
 
-      <div className="relative z-10 w-full h-full flex flex-col max-w-7xl mx-auto px-4 py-2 md:py-3">
+      <div className="relative z-10 w-full h-full flex flex-col max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 2xl:px-8 py-2 md:py-3 transition-all duration-300">
         {/* Header */}
         <header className="flex items-center justify-between gap-4 mb-2 pb-2 border-b border-card-border shrink-0">
           <motion.div
@@ -192,6 +201,18 @@ export default function App() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="flex items-center gap-2"
           >
+            <button
+              onClick={() => setIsInboxOpen(true)}
+              className="2xl:hidden flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+            >
+              <Inbox size={16} className="text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
+              <span className="text-sm font-semibold hidden sm:inline">Inbox</span>
+              {activeTasks.filter(t => t.quadrantId === 'inbox').length > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold">
+                  {activeTasks.filter(t => t.quadrantId === 'inbox').length}
+                </span>
+              )}
+            </button>
             <button
               onClick={() => setIsArchiveOpen(true)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
@@ -218,52 +239,81 @@ export default function App() {
           </motion.div>
         </header>
 
-        {/* Matrix Grid */}
-        <main className="relative flex-1 min-h-0 overflow-y-auto md:overflow-hidden md:pr-1">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4 h-full pb-10 md:pb-0 transition-all duration-500">
-              {QUADRANTS.map((q, idx) => (
-                <motion.div
-                  key={q.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4, delay: 0.05 * idx }}
-                  className="flex flex-col h-[350px] md:h-auto min-h-0"
-                >
-                  <Quadrant
-                    quadrant={q}
-                    tasks={activeTasks.filter(t => t.quadrantId === q.id)}
-                    onAddTask={addTask}
-                    onToggle={toggleTask}
-                    onDelete={deleteTask}
-                    onEdit={editTask}
-                    onToggleStar={toggleStar}
-                  />
-                </motion.div>
-              ))}
-            </div>
+        {/* Matrix Grid & Sidebar */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex-1 flex overflow-hidden min-h-0 gap-6 w-full pb-10 md:pb-0">
+            {/* Matrix Grid */}
+            <main className="relative flex-1 min-h-0 overflow-y-auto md:overflow-hidden min-w-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4 h-full transition-all duration-500">
+                {QUADRANTS.map((q, idx) => (
+                  <motion.div
+                    key={q.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4, delay: 0.05 * idx }}
+                    className="flex flex-col h-[350px] md:h-auto min-h-0"
+                  >
+                    <Quadrant
+                      quadrant={q}
+                      tasks={activeTasks.filter(t => t.quadrantId === q.id)}
+                      onAddTask={addTask}
+                      onToggle={toggleTask}
+                      onDelete={deleteTask}
+                      onEdit={editTask}
+                      onToggleStar={toggleStar}
+                      onMoveToQuadrant={moveToQuadrant}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </main>
 
-            <DragOverlay dropAnimation={{
-              sideEffects: defaultDropAnimationSideEffects({
-                styles: { active: { opacity: '0.4' } },
-              }),
-            }}>
-              {activeId ? (
-                <TaskTicket
-                  task={tasks.find(t => t.id === activeId)!}
-                  isOverlay
-                />
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-        </main>
+            {/* Persistent 2xl Sidebar */}
+            <aside className="hidden 2xl:flex w-80 shrink-0 flex-col">
+              <InboxContent 
+                tasks={activeTasks.filter(t => t.quadrantId === 'inbox')}
+                onAddTask={addTask}
+                onToggle={toggleTask}
+                onDelete={deleteTask}
+                onEdit={editTask}
+                onToggleStar={toggleStar}
+                onMoveToQuadrant={moveToQuadrant}
+              />
+            </aside>
+          </div>
+
+          <DragOverlay dropAnimation={{
+            sideEffects: defaultDropAnimationSideEffects({
+              styles: { active: { opacity: '0.4' } },
+            }),
+          }}>
+            {activeId ? (
+              <TaskTicket
+                task={tasks.find(t => t.id === activeId)!}
+                isOverlay
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
+
+      <InboxDrawer
+        isOpen={isInboxOpen}
+        onClose={() => setIsInboxOpen(false)}
+        tasks={activeTasks.filter(t => t.quadrantId === 'inbox')}
+        onAddTask={addTask}
+        onToggle={toggleTask}
+        onDelete={deleteTask}
+        onEdit={editTask}
+        onToggleStar={toggleStar}
+        onMoveToQuadrant={moveToQuadrant}
+      />
 
       <ArchiveDrawer
         isOpen={isArchiveOpen}

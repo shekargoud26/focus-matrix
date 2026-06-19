@@ -47,12 +47,11 @@ This document contains recommendations from a Senior Product Designer for improv
   - **The Impact:** Reduces manual repetitive clicking, making the transition between planning sessions seamless.
   - **Action:** Add an ellipsis or "Clear All" button in the header of each quadrant (perhaps hidden under a small dropdown menu to prevent accidental clicks).
 
-- [ ] **Feature: Global Inbox (Sidebar Integrable)**
+- [x] **Feature: Global Inbox (Sidebar Integrable)**
   - **The User Problem It Solves:** Users need a place to quickly capture tasks without having to decide immediately which matrix (Work, Personal) or quadrant they belong to.
   - **The Impact:** Reduces cognitive friction during task capture. It will serve as a foundational piece for the upcoming left sidebar multi-matrix architecture.
   - **Action:** 
-    - *Phase 1 (Current view):* Create an unbound "Inbox" container (e.g., a slide-over panel or expandable tray) for rapidly capturing unassigned tasks. Introduce drag-and-drop from the Inbox into the main quadrants.
-    - *Phase 2 (With Sidebar):* Move the Inbox to the top of the new left sidebar, acting as the universal capture zone across all custom matrices.
+    - * Create an unbound "Inbox" container (e.g., a slide-over panel or expandable tray) for rapidly capturing unassigned tasks. Introduce drag-and-drop from the Inbox into the main quadrants.
 
 ---
 

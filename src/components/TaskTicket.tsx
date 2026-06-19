@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Task, QuadrantId } from '../types';
+import { Task, QuadrantId, QUADRANTS } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, Trash2, GripVertical, Edit2, X, Star } from 'lucide-react';
+import { CheckCircle2, Trash2, GripVertical, Edit2, X, Star, ArrowRightLeft } from 'lucide-react';
+import * as Popover from '@radix-ui/react-popover';
 import { cn } from '../lib/utils';
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
   onDelete?: (id: string) => void;
   onEdit?: (id: string, title: string, desc: string) => void;
   onToggleStar?: (id: string) => void;
+  onMoveToQuadrant?: (id: string, quadrantId: QuadrantId) => void;
 }
 
 const quadrantColors: Record<QuadrantId, string> = {
@@ -21,6 +23,7 @@ const quadrantColors: Record<QuadrantId, string> = {
   q2: 'border-l-q2 bg-q2/10',
   q3: 'border-l-q3 bg-q3/10',
   q4: 'border-l-q4 bg-q4/10',
+  inbox: 'border-l-slate-400 bg-slate-100 dark:bg-slate-800/80',
 };
 
 const quadrantRingColors: Record<QuadrantId, string> = {
@@ -28,9 +31,10 @@ const quadrantRingColors: Record<QuadrantId, string> = {
   q2: 'focus-visible:ring-q2/50',
   q3: 'focus-visible:ring-q3/50',
   q4: 'focus-visible:ring-q4/50',
+  inbox: 'focus-visible:ring-slate-400/50',
 };
 
-export default function TaskTicket({ task, isOverlay, onToggle, onDelete, onEdit, onToggleStar }: Props) {
+export default function TaskTicket({ task, isOverlay, onToggle, onDelete, onEdit, onToggleStar, onMoveToQuadrant }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDesc, setEditDesc] = useState(task.description || '');
@@ -185,6 +189,47 @@ export default function TaskTicket({ task, isOverlay, onToggle, onDelete, onEdit
                 >
                   <Edit2 size={16} />
                 </button>
+                {onMoveToQuadrant && (
+                  <Popover.Root>
+                    <Popover.Trigger asChild>
+                      <button
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50"
+                        title="Move"
+                      >
+                        <ArrowRightLeft size={16} />
+                      </button>
+                    </Popover.Trigger>
+                    <Popover.Portal>
+                      <Popover.Content
+                        align="end"
+                        sideOffset={4}
+                        onPointerDownOutside={(e) => e.stopPropagation()}
+                        className="z-[60] w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl ring-1 ring-slate-200/50 dark:ring-slate-700/50 p-1 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-200"
+                      >
+                        <div className="px-2 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                          Move to
+                        </div>
+                        {QUADRANTS.map(q => (
+                           <button
+                             key={q.id}
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               onMoveToQuadrant(task.id, q.id);
+                             }}
+                             className={cn(
+                               "text-left px-2 py-1.5 text-xs font-medium rounded-md hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors focus:outline-none",
+                               task.quadrantId === q.id ? "bg-slate-50 dark:bg-slate-800/80 text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-slate-300"
+                             )}
+                           >
+                             {q.title}
+                           </button>
+                        ))}
+                      </Popover.Content>
+                    </Popover.Portal>
+                  </Popover.Root>
+                )}
               </>
             )}
             <button

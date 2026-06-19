@@ -16,6 +16,7 @@ interface Props {
   onDelete: (id: string) => void;
   onEdit?: (id: string, title: string, desc: string) => void;
   onToggleStar?: (id: string) => void;
+  onMoveToQuadrant?: (id: string, quadrantId: QuadrantId) => void;
 }
 
 const quadrantBackgrounds: Record<QuadrantId, string> = {
@@ -60,7 +61,7 @@ const quadrantRingColors: Record<QuadrantId, string> = {
   q4: 'focus-visible:ring-q4/50',
 };
 
-export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelete, onEdit, onToggleStar }: Props) {
+export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelete, onEdit, onToggleStar, onMoveToQuadrant }: Props) {
   const { setNodeRef } = useDroppable({ id: quadrant.id });
   
   const Icon = QuadrantIcons[quadrant.id];
@@ -110,7 +111,7 @@ export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelet
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {tasks.map((task) => (
-              <TaskTicket key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} onToggleStar={onToggleStar} />
+              <TaskTicket key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} onToggleStar={onToggleStar} onMoveToQuadrant={onMoveToQuadrant} />
             ))}
           </div>
         </SortableContext>
