@@ -11,6 +11,11 @@ export interface Task {
   starred?: boolean;
 }
 
+export interface Profile {
+  name: string;
+  title: string;
+}
+
 export interface QuadrantDef {
   id: QuadrantId;
   title: string;

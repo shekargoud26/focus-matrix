@@ -19,42 +19,42 @@ interface Props {
   onMoveToQuadrant?: (id: string, quadrantId: QuadrantId) => void;
 }
 
-const quadrantBackgrounds: Record<QuadrantId, string> = {
+const quadrantBackgrounds: Record<string, string> = {
   q1: 'bg-q1-bg',
   q2: 'bg-q2-bg',
   q3: 'bg-q3-bg',
   q4: 'bg-q4-bg',
 };
 
-const quadrantEmptyStates: Record<QuadrantId, string> = {
+const quadrantEmptyStates: Record<string, string> = {
   q1: 'Add tasks that are urgent and important to tackle immediately.',
   q2: 'Add tasks that require planning but aren\'t urgent.',
   q3: 'Add tasks that are urgent but can be done by someone else.',
   q4: 'Identify tasks that are neither urgent nor important to avoid.',
 };
 
-const quadrantHeaderColors: Record<QuadrantId, string> = {
+const quadrantHeaderColors: Record<string, string> = {
   q1: 'text-q1-text',
   q2: 'text-q2-text',
   q3: 'text-q3-text',
   q4: 'text-q4-text',
 };
 
-const quadrantBadgeStyles: Record<QuadrantId, string> = {
+const quadrantBadgeStyles: Record<string, string> = {
   q1: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
   q2: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
   q3: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
   q4: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
 };
 
-const QuadrantIcons: Record<QuadrantId, React.ElementType> = {
+const QuadrantIcons: Record<string, React.ElementType> = {
   q1: Zap,
   q2: CalendarDays,
   q3: Users,
   q4: XCircle,
 };
 
-const quadrantRingColors: Record<QuadrantId, string> = {
+const quadrantRingColors: Record<string, string> = {
   q1: 'focus-visible:ring-q1/50',
   q2: 'focus-visible:ring-q2/50',
   q3: 'focus-visible:ring-q3/50',

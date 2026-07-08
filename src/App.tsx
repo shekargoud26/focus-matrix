@@ -20,7 +20,9 @@ import TaskTicket from './components/TaskTicket';
 import ArchiveDrawer from './components/ArchiveDrawer';
 import InboxDrawer from './components/InboxDrawer';
 import InboxContent from './components/InboxContent';
-import { Moon, Sun, Archive, Grid2X2, Inbox } from 'lucide-react';
+import { Routes, Route, Link } from 'react-router-dom';
+import ProfilePage from './pages/ProfilePage';
+import { Moon, Sun, Archive, Grid2X2, Inbox, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
@@ -28,6 +30,14 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>(() => {
     const saved = localStorage.getItem('eisenhower-tasks');
     return saved ? JSON.parse(saved) : [];
+  });
+  const [profile, setProfile] = useState(() => {
+    const saved = localStorage.getItem('focus-matrix-profile');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return { name: parsed.name || 'Alex Developer', title: parsed.title || 'Productivity Enthusiast' };
+    }
+    return { name: 'Alex Developer', title: 'Productivity Enthusiast' };
   });
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -44,6 +54,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('eisenhower-tasks', JSON.stringify(tasks));
   }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem('focus-matrix-profile', JSON.stringify(profile));
+  }, [profile]);
 
   useEffect(() => {
     localStorage.setItem('focus-matrix-theme', isDarkMode ? 'dark' : 'light');
@@ -236,32 +250,59 @@ export default function App() {
                 <Moon size={20} className="text-slate-600" />
               )}
             </button>
+            <Link
+              to="/profile"
+              className="p-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 overflow-hidden flex items-center justify-center"
+              aria-label="Profile"
+            >
+              <User size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" />
+            </Link>
           </motion.div>
         </header>
 
-        {/* Matrix Grid & Sidebar */}
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="flex-1 flex overflow-hidden min-h-0 gap-6 w-full pb-10 md:pb-0">
-            {/* Matrix Grid */}
-            <main className="relative flex-1 min-h-0 overflow-y-auto md:overflow-hidden min-w-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4 h-full transition-all duration-500">
-                {QUADRANTS.map((q, idx) => (
-                  <motion.div
-                    key={q.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, delay: 0.05 * idx }}
-                    className="flex flex-col h-[350px] md:h-auto min-h-0"
-                  >
-                    <Quadrant
-                      quadrant={q}
-                      tasks={activeTasks.filter(t => t.quadrantId === q.id)}
+        {/* Main Routes */}
+        <Routes>
+          <Route path="/" element={
+            <>
+              {/* Matrix Grid & Sidebar */}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCorners}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+              >
+                <div className="flex-1 flex overflow-hidden min-h-0 gap-6 w-full pb-10 md:pb-0">
+                  {/* Matrix Grid */}
+                  <main className="relative flex-1 min-h-0 overflow-y-auto md:overflow-hidden min-w-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4 h-full transition-all duration-500">
+                      {QUADRANTS.map((q, idx) => (
+                        <motion.div
+                          key={q.id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.4, delay: 0.05 * idx }}
+                          className="flex flex-col h-[350px] md:h-auto min-h-0"
+                        >
+                          <Quadrant
+                            quadrant={q}
+                            tasks={activeTasks.filter(t => t.quadrantId === q.id)}
+                            onAddTask={addTask}
+                            onToggle={toggleTask}
+                            onDelete={deleteTask}
+                            onEdit={editTask}
+                            onToggleStar={toggleStar}
+                            onMoveToQuadrant={moveToQuadrant}
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                  </main>
+
+                  {/* Persistent 2xl Sidebar */}
+                  <aside className="hidden 2xl:flex w-80 shrink-0 flex-col">
+                    <InboxContent 
+                      tasks={activeTasks.filter(t => t.quadrantId === 'inbox')}
                       onAddTask={addTask}
                       onToggle={toggleTask}
                       onDelete={deleteTask}
@@ -269,38 +310,27 @@ export default function App() {
                       onToggleStar={toggleStar}
                       onMoveToQuadrant={moveToQuadrant}
                     />
-                  </motion.div>
-                ))}
-              </div>
-            </main>
+                  </aside>
+                </div>
 
-            {/* Persistent 2xl Sidebar */}
-            <aside className="hidden 2xl:flex w-80 shrink-0 flex-col">
-              <InboxContent 
-                tasks={activeTasks.filter(t => t.quadrantId === 'inbox')}
-                onAddTask={addTask}
-                onToggle={toggleTask}
-                onDelete={deleteTask}
-                onEdit={editTask}
-                onToggleStar={toggleStar}
-                onMoveToQuadrant={moveToQuadrant}
-              />
-            </aside>
-          </div>
-
-          <DragOverlay dropAnimation={{
-            sideEffects: defaultDropAnimationSideEffects({
-              styles: { active: { opacity: '0.4' } },
-            }),
-          }}>
-            {activeId ? (
-              <TaskTicket
-                task={tasks.find(t => t.id === activeId)!}
-                isOverlay
-              />
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+                <DragOverlay dropAnimation={{
+                  sideEffects: defaultDropAnimationSideEffects({
+                    styles: { active: { opacity: '0.4' } },
+                  }),
+                }}>
+                  {activeId ? (
+                    <TaskTicket
+                      task={tasks.find(t => t.id === activeId)!}
+                      isOverlay
+                    />
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            </>
+          } />
+          
+          <Route path="/profile" element={<ProfilePage tasks={tasks} profile={profile} onUpdateProfile={setProfile} />} />
+        </Routes>
       </div>
 
       <InboxDrawer
