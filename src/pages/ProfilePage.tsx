@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Task, Profile } from '../types';
-import { User, ArrowLeft, Edit2, Check, X } from 'lucide-react';
+import { User, ArrowLeft, Edit2, Check, X, Calendar, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -16,6 +16,18 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(profile.name);
   const [editTitle, setEditTitle] = useState(profile.title);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const selectedTasks = useMemo(() => {
+    if (!selectedDate) return [];
+    return tasks.filter(task => {
+      if (!task.completed || !task.closedAt) return false;
+      const date = new Date(task.closedAt);
+      date.setHours(0, 0, 0, 0);
+      const dateStr = date.toISOString().split('T')[0];
+      return dateStr === selectedDate;
+    });
+  }, [tasks, selectedDate]);
 
   const handleSave = () => {
     onUpdateProfile({
@@ -98,7 +110,7 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) 
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex-1 w-full max-w-4xl mx-auto flex flex-col gap-8 pb-12"
+        className="flex-1 w-full max-w-4xl mx-auto flex flex-col gap-8 pb-12 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full"
       >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 gap-6 relative">
           <div className="flex items-center gap-4 w-full">
@@ -193,9 +205,11 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) 
                     <Tooltip.Root key={dIdx}>
                       <Tooltip.Trigger asChild>
                         <div
+                          onClick={() => setSelectedDate(day.date.toISOString().split('T')[0])}
                           className={cn(
-                            "w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-sm transition-colors cursor-default hover:ring-2 ring-offset-1 ring-offset-white dark:ring-offset-slate-900 ring-slate-300 dark:ring-slate-600", 
-                            getColorClass(day.count, maxCount)
+                            "w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-sm transition-colors cursor-pointer hover:ring-2 ring-offset-1 ring-offset-white dark:ring-offset-slate-900 ring-slate-300 dark:ring-slate-600", 
+                            getColorClass(day.count, maxCount),
+                            selectedDate === day.date.toISOString().split('T')[0] && "ring-2 ring-indigo-500 dark:ring-indigo-400"
                           )}
                         />
                       </Tooltip.Trigger>
@@ -223,6 +237,52 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) 
             <div className="w-3.5 h-3.5 rounded-sm bg-emerald-500" />
             <span>More</span>
           </div>
+
+          <AnimatePresence>
+            {selectedDate && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 overflow-hidden"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Calendar size={16} className="text-indigo-500" />
+                    Tasks on {new Date(selectedDate).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                  </h4>
+                  <span className="text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-1 rounded-full">
+                    {selectedTasks.length} {selectedTasks.length === 1 ? 'Task' : 'Tasks'}
+                  </span>
+                </div>
+                
+                {selectedTasks.length > 0 ? (
+                  <ul className="space-y-2 max-h-60 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+                    {selectedTasks.map(task => (
+                      <motion.li 
+                        key={task.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80"
+                      >
+                        <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" />
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">{task.title}</span>
+                          {task.description && (
+                            <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{task.description}</span>
+                          )}
+                        </div>
+                      </motion.li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-6">
+                    No tasks completed on this day.
+                  </p>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         
         <div className="text-center mt-8">

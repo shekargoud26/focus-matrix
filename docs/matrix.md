@@ -15,11 +15,12 @@ The matrix consists of four specific quadrants (defined in `src/types.ts`):
 ## Task Data Structure
 Tasks are defined by the `Task` interface in `src/types.ts`. Key properties include:
 - `id`: string
-- `content`: string (The task description)
+- `title`: string (The task title)
+- `description`: string (Optional detailed description)
 - `quadrantId`: string (`q1`, `q2`, `q3`, `q4`, or `inbox`)
 - `completed`: boolean
 - `createdAt`: number (timestamp)
-- `completedAt`: number (timestamp, optional)
+- `closedAt`: number (timestamp, optional)
 - `starred`: boolean (optional)
 
 ## Drag and Drop (DnD)

@@ -199,14 +199,15 @@ export default function App() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="flex items-center gap-3"
           >
-            <div className="flex items-center justify-center">
-              <Grid2X2 strokeWidth={2.5} size={22} className="text-slate-800 dark:text-slate-100" />
-            </div>
-            <h1 className="text-xl font-extrabold tracking-tight text-app-text">
-              Focus Matrix
-            </h1>
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 rounded-md">
+              <div className="flex items-center justify-center">
+                <Grid2X2 strokeWidth={2.5} size={22} className="text-slate-800 dark:text-slate-100" />
+              </div>
+              <h1 className="text-xl font-extrabold tracking-tight text-app-text">
+                Focus Matrix
+              </h1>
+            </Link>
           </motion.div>
 
           <motion.div 

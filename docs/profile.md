@@ -16,7 +16,9 @@ The Profile page is a dedicated route that displays the user's information and a
 - **Visualization**:
   - Displays a grid of squares, representing 52 weeks of activity.
   - Cell colors correspond to the volume of tasks completed on that day (e.g., using Tailwind `emerald` classes from `bg-slate-100` / `dark:bg-slate-800` up to `bg-emerald-500`).
-- **Tooltips**: Hovering over a heatmap cell displays a customized tooltip showing the exact number of tasks completed and the date. This uses `@radix-ui/react-tooltip`.
+- **Interaction**:
+  - **Tooltips**: Hovering over a heatmap cell displays a customized tooltip showing the exact number of tasks completed and the date. This uses `@radix-ui/react-tooltip`.
+  - **Daily Task List**: Clicking on a cell selects that date and reveals a list of all tasks completed on that day below the heatmap, complete with slide-down animations.
 
 ## Responsiveness
 - The layout adjusts from a vertical stack on smaller screens to a more horizontal, spacious layout on large screens.
