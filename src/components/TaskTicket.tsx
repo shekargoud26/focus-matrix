@@ -5,6 +5,8 @@ import { Task, QuadrantId, QUADRANTS } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, Trash2, GripVertical, Edit2, X, Star, ArrowRightLeft } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cn } from '../lib/utils';
 
 interface Props {
@@ -93,11 +95,11 @@ export default function TaskTicket({ task, isOverlay, onToggle, onDelete, onEdit
           placeholder="Task title"
         />
         <textarea
-          className="w-full bg-transparent border-0 text-xs resize-none focus:outline-none focus:ring-0 px-1 py-1 mb-3 min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-600 dark:text-slate-400"
+          className="w-full bg-transparent border-0 text-xs resize-y focus:outline-none focus:ring-0 px-1 py-1 mb-3 min-h-[100px] placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-600 dark:text-slate-400"
           value={editDesc}
           onChange={(e) => setEditDesc(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Description (optional)"
+          placeholder="Description (Markdown supported)"
         />
         <div className="flex justify-end gap-2">
           <button
@@ -152,9 +154,9 @@ export default function TaskTicket({ task, isOverlay, onToggle, onDelete, onEdit
             <span className="truncate">{task.title}</span>
           </h4>
           {task.description && (
-            <p className="text-[11px] text-slate-500 dark:text-slate-300 mt-1 line-clamp-2 leading-relaxed">
-              {task.description}
-            </p>
+            <div className="text-[11px] text-slate-500 dark:text-slate-300 mt-2 leading-relaxed prose prose-slate dark:prose-invert max-w-none prose-sm prose-p:my-1 prose-headings:my-1 prose-ul:my-1 prose-li:my-0 prose-pre:p-2 prose-pre:bg-slate-100 dark:prose-pre:bg-slate-900 break-words">
+              <Markdown remarkPlugins={[remarkGfm]}>{task.description}</Markdown>
+            </div>
           )}
         </div>
 
