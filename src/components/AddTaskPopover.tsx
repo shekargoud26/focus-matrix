@@ -76,7 +76,7 @@ export default function AddTaskPopover({ onAdd, children, shortcutKey }: Props) 
               </div>
               <div>
                 <textarea
-                  placeholder="Description (optional)"
+                  placeholder="Description (GitHub Flavored Markdown supported)"
                   className="w-full bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 shadow-sm text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/50 px-3 py-2.5 rounded-lg text-slate-500 dark:text-slate-300 resize-none placeholder:text-slate-400/60 transition-all"
                   rows={2}
                   value={desc}

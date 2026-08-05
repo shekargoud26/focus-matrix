@@ -124,6 +124,12 @@ export default function App() {
     ));
   };
 
+  const updateTaskDate = (id: string, newDate: number) => {
+    setTasks(prev => prev.map((t) => 
+      t.id === id ? { ...t, closedAt: newDate } : t
+    ));
+  };
+
   const deleteTask = (id: string) => {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
@@ -200,7 +206,7 @@ export default function App() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 rounded-md">
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded-md">
               <div className="flex items-center justify-center">
                 <Grid2X2 strokeWidth={2.5} size={22} className="text-slate-800 dark:text-slate-100" />
               </div>
@@ -256,7 +262,7 @@ export default function App() {
               className="p-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 overflow-hidden flex items-center justify-center"
               aria-label="Profile"
             >
-              <User size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" />
+              <User size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
             </Link>
           </motion.div>
         </header>
@@ -330,7 +336,7 @@ export default function App() {
             </>
           } />
           
-          <Route path="/profile" element={<ProfilePage tasks={tasks} profile={profile} onUpdateProfile={setProfile} />} />
+          <Route path="/profile" element={<ProfilePage tasks={tasks} profile={profile} onUpdateProfile={setProfile} onUpdateTaskDate={updateTaskDate} />} />
         </Routes>
       </div>
 
@@ -352,6 +358,7 @@ export default function App() {
         tasks={archivedTasks}
         onDelete={deleteTask}
         onRestore={toggleTask}
+        onUpdateTaskDate={updateTaskDate}
       />
     </div>
   );

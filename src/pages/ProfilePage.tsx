@@ -5,18 +5,23 @@ import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import * as Tooltip from '@radix-ui/react-tooltip';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import DatePicker from '../components/DatePicker';
 
 interface Props {
   tasks: Task[];
   profile: Profile;
   onUpdateProfile: (profile: Profile) => void;
+  onUpdateTaskDate?: (id: string, newDate: number) => void;
 }
 
-export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) {
+export default function ProfilePage({ tasks, profile, onUpdateProfile, onUpdateTaskDate }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(profile.name);
   const [editTitle, setEditTitle] = useState(profile.title);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [editingDateId, setEditingDateId] = useState<string | null>(null);
 
   const selectedTasks = useMemo(() => {
     if (!selectedDate) return [];
@@ -136,7 +141,7 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) 
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       placeholder="Your Name"
-                      className="w-full px-3 py-1.5 text-xl font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:text-white"
+                      className="w-full px-3 py-1.5 text-xl font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:text-white"
                       autoFocus
                     />
                     <input
@@ -144,12 +149,12 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) 
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       placeholder="Your Title"
-                      className="w-full px-3 py-1.5 text-sm font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:text-slate-300"
+                      className="w-full px-3 py-1.5 text-sm font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:text-slate-300"
                     />
                     <div className="flex gap-2 mt-1">
                       <button
                         onClick={handleSave}
-                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors"
+                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors"
                       >
                         <Check size={14} />
                         Save
@@ -173,20 +178,22 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) 
             </div>
           </div>
           
-          <div className="hidden sm:flex flex-col items-end shrink-0">
-            <span className="text-3xl font-bold text-slate-900 dark:text-white">{totalCompleted}</span>
-            <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Tasks Completed</span>
-          </div>
+          <div className="flex items-start gap-4 shrink-0 absolute top-6 right-6 sm:relative sm:top-auto sm:right-auto">
+            <div className="hidden sm:flex flex-col items-end">
+              <span className="text-3xl font-bold text-slate-900 dark:text-white">{totalCompleted}</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Tasks Completed</span>
+            </div>
 
-          {!isEditing && (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-md transition-colors"
-              title="Edit Profile"
-            >
-              <Edit2 size={18} />
-            </button>
-          )}
+            {!isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors"
+                title="Edit Profile"
+              >
+                <Edit2 size={18} />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 sm:p-8">
@@ -197,7 +204,7 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) 
             </span>
           </h3>
           
-          <div className="flex gap-1.5 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" style={{ direction: 'rtl' }}>
+          <div className="flex gap-1.5 overflow-x-auto pb-4 pt-1 px-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" style={{ direction: 'rtl' }}>
             <div className="flex gap-1.5" style={{ direction: 'ltr' }}>
               {weeks.map((week, wIdx) => (
                 <div key={wIdx} className="flex flex-col gap-1.5">
@@ -209,7 +216,7 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) 
                           className={cn(
                             "w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-sm transition-colors cursor-pointer hover:ring-2 ring-offset-1 ring-offset-white dark:ring-offset-slate-900 ring-slate-300 dark:ring-slate-600", 
                             getColorClass(day.count, maxCount),
-                            selectedDate === day.date.toISOString().split('T')[0] && "ring-2 ring-indigo-500 dark:ring-indigo-400"
+                            selectedDate === day.date.toISOString().split('T')[0] && "ring-2 ring-blue-500 dark:ring-blue-400"
                           )}
                         />
                       </Tooltip.Trigger>
@@ -248,7 +255,7 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) 
               >
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Calendar size={16} className="text-indigo-500" />
+                    <Calendar size={16} className="text-blue-500" />
                     Tasks on {new Date(selectedDate).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                   </h4>
                   <span className="text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-1 rounded-full">
@@ -263,13 +270,60 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile }: Props) 
                         key={task.id}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80"
+                        className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 group"
                       >
                         <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" />
-                        <div className="flex flex-col min-w-0">
+                        <div className="flex flex-col min-w-0 flex-1">
                           <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">{task.title}</span>
                           {task.description && (
-                            <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{task.description}</span>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-300 mt-1 leading-relaxed prose prose-slate dark:prose-invert max-w-none prose-sm prose-p:my-1 prose-headings:my-1 prose-ul:my-1 prose-li:my-0 prose-pre:p-2 prose-pre:bg-slate-100 dark:prose-pre:bg-slate-900 break-words">
+                              <Markdown 
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  input: ({ node, ...props }) => (
+                                    <input {...props} className="mr-1.5 mt-0.5 align-middle accent-slate-500" />
+                                  ),
+                                  li: ({ node, className, ...props }) => (
+                                    <li className={cn(className, className?.includes('task-list-item') && "flex items-start list-none ml-0")} {...props} />
+                                  )
+                                }}
+                              >
+                                {task.description
+                                  .replace(/^[-*]?\s*\[\s*\]\s+/gm, '- [ ] ')
+                                  .replace(/^[-*]?\s*\[[xX]\]\s+/gm, '- [x] ')
+                                }
+                              </Markdown>
+                            </div>
+                          )}
+                        </div>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          {editingDateId === task.id ? (
+                            <DatePicker
+                              date={new Date(task.closedAt || task.createdAt)}
+                              onClose={() => setEditingDateId(null)}
+                              onChange={(newDate) => {
+                                if (onUpdateTaskDate) {
+                                  const oldD = new Date(task.closedAt || task.createdAt);
+                                  newDate.setHours(oldD.getHours(), oldD.getMinutes(), oldD.getSeconds());
+                                  onUpdateTaskDate(task.id, newDate.getTime());
+                                }
+                              }}
+                            >
+                              <button
+                                className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-md text-blue-600 dark:text-blue-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                title="Editing Date"
+                              >
+                                <Calendar size={14} />
+                              </button>
+                            </DatePicker>
+                          ) : (
+                            <button
+                              onClick={() => setEditingDateId(task.id)}
+                              className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md text-slate-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                              title="Edit Completed Date"
+                            >
+                              <Calendar size={14} />
+                            </button>
                           )}
                         </div>
                       </motion.li>

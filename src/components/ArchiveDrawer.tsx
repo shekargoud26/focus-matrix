@@ -1,9 +1,10 @@
 import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Task, QUADRANTS } from '../types';
-import { X, RotateCcw, Trash2, Archive } from 'lucide-react';
+import { X, RotateCcw, Trash2, Archive, Calendar as CalendarIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import DatePicker from './DatePicker';
 
 interface Props {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface Props {
   tasks: Task[];
   onDelete: (id: string) => void;
   onRestore: (id: string) => void;
+  onUpdateTaskDate?: (id: string, newDate: number) => void;
 }
 
 const quadrantTextColors: Record<string, string> = {
@@ -20,7 +22,9 @@ const quadrantTextColors: Record<string, string> = {
   q4: 'text-q4',
 };
 
-export default function ArchiveDrawer({ isOpen, onClose, tasks, onDelete, onRestore }: Props) {
+export default function ArchiveDrawer({ isOpen, onClose, tasks, onDelete, onRestore, onUpdateTaskDate }: Props) {
+  const [editingDateId, setEditingDateId] = React.useState<string | null>(null);
+
   const groupedTasks = tasks.reduce((acc, task) => {
     const date = new Date(task.closedAt || task.createdAt);
     const today = new Date();
@@ -89,6 +93,34 @@ export default function ArchiveDrawer({ isOpen, onClose, tasks, onDelete, onRest
                           </div>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {editingDateId === task.id ? (
+                            <DatePicker
+                              date={new Date(task.closedAt || task.createdAt)}
+                              onClose={() => setEditingDateId(null)}
+                              onChange={(newDate) => {
+                                if (onUpdateTaskDate) {
+                                  const oldD = new Date(task.closedAt || task.createdAt);
+                                  newDate.setHours(oldD.getHours(), oldD.getMinutes(), oldD.getSeconds());
+                                  onUpdateTaskDate(task.id, newDate.getTime());
+                                }
+                              }}
+                            >
+                              <button
+                                className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                title="Editing Date"
+                              >
+                                <CalendarIcon size={16} />
+                              </button>
+                            </DatePicker>
+                          ) : (
+                            <button
+                              onClick={() => setEditingDateId(task.id)}
+                              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg text-slate-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                              title="Edit Completed Date"
+                            >
+                              <CalendarIcon size={16} />
+                            </button>
+                          )}
                           <button
                             onClick={() => onRestore(task.id)}
                             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg text-slate-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
