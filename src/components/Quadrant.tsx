@@ -4,7 +4,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Task, QuadrantDef, QuadrantId } from '../types';
 import TaskTicket from './TaskTicket';
 import AddTaskPopover from './AddTaskPopover';
-import { Plus, Zap, CalendarDays, Users, XCircle } from 'lucide-react';
+import { Plus, Zap, CalendarDays, Users, XCircle, Maximize2, Minimize2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion } from 'motion/react';
 
@@ -17,6 +17,8 @@ interface Props {
   onEdit?: (id: string, title: string, desc: string) => void;
   onToggleStar?: (id: string) => void;
   onMoveToQuadrant?: (id: string, quadrantId: QuadrantId) => void;
+  isZenMode?: boolean;
+  onToggleZenMode?: () => void;
 }
 
 const quadrantBackgrounds: Record<string, string> = {
@@ -61,7 +63,7 @@ const quadrantRingColors: Record<string, string> = {
   q4: 'focus-visible:ring-q4/50',
 };
 
-export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelete, onEdit, onToggleStar, onMoveToQuadrant }: Props) {
+export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelete, onEdit, onToggleStar, onMoveToQuadrant, isZenMode, onToggleZenMode }: Props) {
   const { setNodeRef } = useDroppable({ id: quadrant.id });
   
   const Icon = QuadrantIcons[quadrant.id];
@@ -90,20 +92,34 @@ export default function Quadrant({ quadrant, tasks, onAddTask, onToggle, onDelet
             {quadrant.subtitle}
           </span>
         </div>
-        <AddTaskPopover 
-          onAdd={(title, desc) => onAddTask(quadrant.id, title, desc)}
-          shortcutKey={quadrant.id.replace('q', '')}
-        >
-          <button 
-            title={`Add task (Alt+${quadrant.id.replace('q', '')})`}
-            className={cn(
-              "p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-all duration-200 focus:outline-none focus-visible:ring-2",
-              quadrantRingColors[quadrant.id]
-            )}
+        <div className="flex items-center gap-1">
+          {onToggleZenMode && (
+            <button
+              onClick={onToggleZenMode}
+              title={isZenMode ? "Exit Zen Mode" : "Enter Zen Mode"}
+              className={cn(
+                "p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-all duration-200 focus:outline-none focus-visible:ring-2",
+                quadrantRingColors[quadrant.id]
+              )}
+            >
+              {isZenMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
+          )}
+          <AddTaskPopover 
+            onAdd={(title, desc) => onAddTask(quadrant.id, title, desc)}
+            shortcutKey={quadrant.id.replace('q', '')}
           >
-            <Plus size={18} />
-          </button>
-        </AddTaskPopover>
+            <button 
+              title={`Add task (Alt+${quadrant.id.replace('q', '')})`}
+              className={cn(
+                "p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-all duration-200 focus:outline-none focus-visible:ring-2",
+                quadrantRingColors[quadrant.id]
+              )}
+            >
+              <Plus size={18} />
+            </button>
+          </AddTaskPopover>
+        </div>
       </div>
 
       {/* Content */}

@@ -50,6 +50,7 @@ export default function App() {
   });
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
+  const [zenModeQuadrant, setZenModeQuadrant] = useState<QuadrantId | null>(null);
 
   useEffect(() => {
     localStorage.setItem('eisenhower-tasks', JSON.stringify(tasks));
@@ -282,18 +283,54 @@ export default function App() {
                 <div className="flex-1 flex overflow-hidden min-h-0 gap-6 w-full pb-10 md:pb-0">
                   {/* Matrix Grid */}
                   <main className="relative flex-1 min-h-0 overflow-y-auto md:overflow-hidden min-w-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-4 h-full transition-all duration-500">
-                      {QUADRANTS.map((q, idx) => (
-                        <motion.div
-                          key={q.id}
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.4, delay: 0.05 * idx }}
-                          className="flex flex-col h-[350px] md:h-auto min-h-0"
-                        >
-                          <Quadrant
-                            quadrant={q}
-                            tasks={activeTasks.filter(t => t.quadrantId === q.id)}
+                    <div className={cn(
+                      "grid gap-4 h-full transition-all duration-500",
+                      zenModeQuadrant 
+                        ? "grid-cols-1 grid-rows-1" 
+                        : "grid-cols-1 md:grid-cols-2 md:grid-rows-2"
+                    )}>
+                      <AnimatePresence mode="popLayout">
+                        {QUADRANTS.filter(q => !zenModeQuadrant || q.id === zenModeQuadrant).map((q, idx) => (
+                          <motion.div
+                            layout
+                            key={q.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                            transition={{ duration: 0.4, delay: 0.05 * idx, layout: { type: "spring", bounce: 0.2, duration: 0.6 } }}
+                            className="flex flex-col h-[350px] md:h-auto min-h-0"
+                          >
+                            <Quadrant
+                              quadrant={q}
+                              tasks={activeTasks.filter(t => t.quadrantId === q.id)}
+                              onAddTask={addTask}
+                              onToggle={toggleTask}
+                              onDelete={deleteTask}
+                              onEdit={editTask}
+                              onToggleStar={toggleStar}
+                              onMoveToQuadrant={moveToQuadrant}
+                              isZenMode={zenModeQuadrant === q.id}
+                              onToggleZenMode={() => setZenModeQuadrant(prev => prev === q.id ? null : q.id)}
+                            />
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  </main>
+
+                  {/* Persistent 2xl Sidebar */}
+                  <AnimatePresence>
+                    {!zenModeQuadrant && (
+                      <motion.aside 
+                        initial={{ opacity: 0, width: 0, marginLeft: 0 }}
+                        animate={{ opacity: 1, width: 320, marginLeft: 24 }}
+                        exit={{ opacity: 0, width: 0, marginLeft: 0 }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
+                        className="hidden 2xl:flex shrink-0 flex-col overflow-hidden"
+                      >
+                        <div className="w-80 h-full">
+                          <InboxContent 
+                            tasks={activeTasks.filter(t => t.quadrantId === 'inbox')}
                             onAddTask={addTask}
                             onToggle={toggleTask}
                             onDelete={deleteTask}
@@ -301,23 +338,10 @@ export default function App() {
                             onToggleStar={toggleStar}
                             onMoveToQuadrant={moveToQuadrant}
                           />
-                        </motion.div>
-                      ))}
-                    </div>
-                  </main>
-
-                  {/* Persistent 2xl Sidebar */}
-                  <aside className="hidden 2xl:flex w-80 shrink-0 flex-col">
-                    <InboxContent 
-                      tasks={activeTasks.filter(t => t.quadrantId === 'inbox')}
-                      onAddTask={addTask}
-                      onToggle={toggleTask}
-                      onDelete={deleteTask}
-                      onEdit={editTask}
-                      onToggleStar={toggleStar}
-                      onMoveToQuadrant={moveToQuadrant}
-                    />
-                  </aside>
+                        </div>
+                      </motion.aside>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <DragOverlay dropAnimation={{
