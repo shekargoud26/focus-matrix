@@ -9,6 +9,8 @@ export interface Task {
   createdAt: number;
   closedAt?: number;
   starred?: boolean;
+  /** Server ordering slot. Local-only tasks / guest cache may omit it. */
+  position?: number;
 }
 
 export interface Profile {

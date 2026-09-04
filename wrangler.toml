@@ -1,3 +1,10 @@
 name = "focus-matrix"
+main = "server/index.workers.ts"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-03-20"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "focus-matrix"
+database_id = "placeholder-replace-with-wrangler-d1-create-id"
+migrations_dir = "drizzle"
