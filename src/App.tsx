@@ -44,6 +44,7 @@ function MatrixApp() {
     moveLocal,
     reorderLocal,
     commitDrag,
+    importTasks,
   } = useTasks(mode);
   const { profile, updateProfile } = useProfile(mode);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -333,7 +334,7 @@ function MatrixApp() {
             </>
           } />
           
-          <Route path="/profile" element={<ProfilePage tasks={tasks} profile={profile} onUpdateProfile={updateProfile} onUpdateTaskDate={updateTaskDate} />} />
+          <Route path="/profile" element={<ProfilePage tasks={tasks} profile={profile} onUpdateProfile={updateProfile} onUpdateTaskDate={updateTaskDate} onImportTasks={importTasks} />} />
         </Routes>
       </div>
 

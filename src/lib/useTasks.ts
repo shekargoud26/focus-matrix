@@ -208,6 +208,29 @@ export function useTasks(mode: AuthMode) {
     [mutate],
   );
 
+  /** Restore tasks from a backup file. Merges by id (never deletes). Returns imported count. */
+  const importTasks = useCallback(async (incoming: Task[]): Promise<number> => {
+    const fresh = incoming.filter((t) => !tasksRef.current.some((e) => e.id === t.id));
+    if (fresh.length === 0) return 0;
+    if (modeRef.current === 'guest') {
+      setTasks((prev) => [...fresh, ...prev]);
+      return fresh.length;
+    }
+    // Authed: persist each missing task, then converge with returned ids.
+    const created: Task[] = [];
+    for (const t of fresh) {
+      const srv = toClient(await api.createTask({ title: t.title, description: t.description, quadrantId: t.quadrantId }));
+      const patch: Record<string, unknown> = {};
+      if (t.completed) patch.completed = true;
+      if (t.starred) patch.starred = true;
+      if (t.closedAt) patch.closedAt = t.closedAt;
+      const final = Object.keys(patch).length > 0 ? toClient(await api.updateTask(srv.id, patch as never)) : srv;
+      created.push(final);
+    }
+    setTasks((prev) => [...created, ...prev]);
+    return created.length;
+  }, []);
+
   /** Local-only quadrant change during drag-over (persisted on drop). */
   const moveLocal = useCallback((id: string, quadrantId: QuadrantId) => {
     pendingSyncRef.current.add(id);
@@ -263,6 +286,7 @@ export function useTasks(mode: AuthMode) {
     editTask,
     updateTaskDate,
     deleteTask,
+    importTasks,
     moveLocal,
     reorderLocal,
     commitDrag,
