@@ -275,6 +275,15 @@ export default function App() {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
 
+  /** Restore tasks from a backup file. Merges by id (never deletes). Returns imported count. */
+  const importTasks = async (incoming: Task[]): Promise<number> => {
+    const ids = new Set(tasks.map(t => t.id));
+    const fresh = incoming.filter(t => !ids.has(t.id));
+    if (fresh.length === 0) return 0;
+    setTasks(prev => [...fresh, ...prev]);
+    return fresh.length;
+  };
+
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string);
   }
@@ -500,7 +509,7 @@ export default function App() {
             </>
           } />
           
-          <Route path="/profile" element={<ProfilePage tasks={tasks} profile={profile} onUpdateProfile={setProfile} onUpdateTaskDate={updateTaskDate} />} />
+          <Route path="/profile" element={<ProfilePage tasks={tasks} profile={profile} onUpdateProfile={setProfile} onUpdateTaskDate={updateTaskDate} onImportTasks={importTasks} />} />
         </Routes>
       </div>
 
