@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Task, Profile } from '../types';
-import { User, ArrowLeft, Edit2, Check, X, Calendar, CheckCircle2 } from 'lucide-react';
+import { User, ArrowLeft, Edit2, Check, X, Calendar, CheckCircle2, Download, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -8,20 +8,41 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import DatePicker from '../components/DatePicker';
+import { downloadBackup, parseBackup } from '../lib/backup';
 
 interface Props {
   tasks: Task[];
   profile: Profile;
   onUpdateProfile: (profile: Profile) => void;
   onUpdateTaskDate?: (id: string, newDate: number) => void;
+  onImportTasks?: (tasks: Task[]) => Promise<number>;
 }
 
-export default function ProfilePage({ tasks, profile, onUpdateProfile, onUpdateTaskDate }: Props) {
+export default function ProfilePage({ tasks, profile, onUpdateProfile, onUpdateTaskDate, onImportTasks }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(profile.name);
   const [editTitle, setEditTitle] = useState(profile.title);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [editingDateId, setEditingDateId] = useState<string | null>(null);
+  const [backupMsg, setBackupMsg] = useState<string | null>(null);
+  const [backupError, setBackupError] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !onImportTasks) return;
+    try {
+      const { tasks: incoming, profile: incomingProfile } = parseBackup(await file.text());
+      const count = await onImportTasks(incoming);
+      if (incomingProfile) onUpdateProfile(incomingProfile);
+      setBackupError(false);
+      setBackupMsg(count > 0 ? `Restored ${count} task${count === 1 ? '' : 's'}.` : 'Backup already matches — nothing new to restore.');
+    } catch {
+      setBackupError(true);
+      setBackupMsg('Could not read that file. Pick a Focus Matrix JSON backup.');
+    }
+  };
 
   const selectedTasks = useMemo(() => {
     if (!selectedDate) return [];
@@ -337,6 +358,36 @@ export default function ProfilePage({ tasks, profile, onUpdateProfile, onUpdateT
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 sm:p-8">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Backup</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
+            {tasks.length} task{tasks.length === 1 ? '' : 's'} saved as one JSON file. Keep it somewhere safe — restoring never deletes, it only adds missing tasks.
+          </p>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <button
+              onClick={() => { downloadBackup(tasks, profile); setBackupError(false); setBackupMsg('Backup downloaded.'); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+            >
+              <Download size={14} />
+              Export backup
+            </button>
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={!onImportTasks}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:opacity-50"
+            >
+              <Upload size={14} />
+              Import backup
+            </button>
+            <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
+          </div>
+          {backupMsg && (
+            <p className={cn("text-xs font-medium mt-3", backupError ? "text-red-500" : "text-emerald-600 dark:text-emerald-400")}>
+              {backupMsg}
+            </p>
+          )}
         </div>
         
         <div className="text-center mt-8">
