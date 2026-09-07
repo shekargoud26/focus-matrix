@@ -6,9 +6,9 @@ pages_build_output_dir = "dist"
 compatibility_date = "2024-03-20"
 
 [[d1_databases]]
-binding = "DB"
+binding = "focus_matrix"
 database_name = "focus-matrix"
-database_id = "placeholder-replace-with-wrangler-d1-create-id"
+database_id = "1c94fb3c-e969-4e37-b9e0-8edf0782dc6a"
 migrations_dir = "drizzle"
 
 # Uncomment to close registration (login still works). Dashboard variable
