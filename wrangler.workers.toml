@@ -1,0 +1,17 @@
+# Cloudflare Workers deploy (API + frontend static assets in one Worker).
+# Usage: npx wrangler deploy --config wrangler.workers.toml
+# (The default `wrangler.toml` is the Pages project config — Pages rejects
+# the `main` key, so the two targets need separate files.)
+name = "focus-matrix"
+main = "server/index.workers.ts"
+compatibility_date = "2024-03-20"
+
+[assets]
+directory = "dist"
+not_found_handling = "single-page-application"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "focus-matrix"
+database_id = "placeholder-replace-with-wrangler-d1-create-id"
+migrations_dir = "drizzle"

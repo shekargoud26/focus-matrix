@@ -1,5 +1,7 @@
+# Cloudflare Pages project config (frontend `dist/`).
+# NOTE: Pages validation rejects the Workers `main` key, so the Worker entry
+# lives in `wrangler.workers.toml` — see docs/deploy.md.
 name = "focus-matrix"
-main = "server/index.workers.ts"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-03-20"
 
