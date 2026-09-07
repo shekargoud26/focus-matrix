@@ -5,7 +5,7 @@ import { taskRoutes } from './routes/tasks.ts';
 import { profileRoutes } from './routes/profile.ts';
 
 export interface AppEnv {
-  Bindings: { DB?: unknown };
+  Bindings: { DB?: unknown; DISABLE_SIGNUPS?: string };
   Variables: AuthVars;
 }
 

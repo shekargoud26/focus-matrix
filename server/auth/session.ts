@@ -7,6 +7,15 @@ import { sessions, users } from '../db/schema.ts';
 export const SESSION_COOKIE = 'session';
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+/** Registration kill-switch. `DISABLE_SIGNUPS=true|1|yes` closes signup. */
+export function signupsDisabled(c: Context): boolean {
+  const fromBinding = (c.env as Record<string, unknown> | undefined)?.DISABLE_SIGNUPS;
+  const fromProcess =
+    typeof process !== 'undefined' ? (process.env?.DISABLE_SIGNUPS as string | undefined) : undefined;
+  const raw = String(fromBinding ?? fromProcess ?? '').toLowerCase();
+  return raw === 'true' || raw === '1' || raw === 'yes';
+}
+
 export interface AuthedUser {
   id: string;
   email: string;
