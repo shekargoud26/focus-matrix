@@ -13,13 +13,27 @@ export class ApiError extends Error {
 }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      ...init,
+    });
+  } catch {
+    // Backend unreachable (DNS, offline, no route) — distinct from HTTP errors.
+    throw new ApiError(0, { error: 'network_unreachable' });
+  }
   const text = await res.text();
-  const body = text ? (JSON.parse(text) as unknown) : null;
+  let body: unknown = null;
+  if (text) {
+    try {
+      body = JSON.parse(text) as unknown;
+    } catch {
+      // e.g. SPA fallback HTML when the API isn't deployed alongside.
+      throw new ApiError(res.status, { error: 'bad_response' });
+    }
+  }
   if (!res.ok) throw new ApiError(res.status, body);
   return body as T;
 }

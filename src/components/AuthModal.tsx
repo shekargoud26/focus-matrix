@@ -17,6 +17,12 @@ function friendlyError(e: unknown, fallback: string): string {
     if (body?.error === 'email_taken') return 'That email is already registered. Try logging in.';
     if (body?.error === 'invalid_credentials') return 'Wrong email or password. Try again.';
     if (body?.error === 'invalid_input') return 'Please check the highlighted fields.';
+    if (body?.error === 'network_unreachable' || body?.error === 'bad_response') {
+      return 'Can’t reach the server — the API isn’t deployed yet. You can keep using Focus Matrix offline.';
+    }
+    if (body?.error === 'database_not_configured') {
+      return 'Server is up but its database isn’t connected yet. Try again after setup.';
+    }
     if (e.status >= 500) return 'Server hiccup — try again in a moment.';
   }
   return fallback;
