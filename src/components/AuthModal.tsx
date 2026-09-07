@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { LogIn, UserPlus, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ApiError } from '../lib/api';
+import { ApiError, api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { cn } from '../lib/utils';
 
@@ -17,6 +17,7 @@ function friendlyError(e: unknown, fallback: string): string {
     if (body?.error === 'email_taken') return 'That email is already registered. Try logging in.';
     if (body?.error === 'invalid_credentials') return 'Wrong email or password. Try again.';
     if (body?.error === 'invalid_input') return 'Please check the highlighted fields.';
+    if (body?.error === 'signups_disabled') return 'New signups are disabled on this server.';
     if (body?.error === 'network_unreachable' || body?.error === 'bad_response') {
       return 'Can’t reach the server — the API isn’t deployed yet. You can keep using Focus Matrix offline.';
     }
@@ -39,6 +40,26 @@ export default function AuthModal({ open, onOpenChange }: Props) {
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // null = unknown (older backend / fetch failed) → assume open.
+  const [signupsDisabled, setSignupsDisabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    api
+      .config()
+      .then((cfg) => {
+        if (cancelled) return;
+        setSignupsDisabled(cfg.signupsDisabled);
+        if (cfg.signupsDisabled) setTab('login');
+      })
+      .catch(() => {
+        if (!cancelled) setSignupsDisabled(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   const reset = () => {
     setEmail('');
@@ -103,26 +124,32 @@ export default function AuthModal({ open, onOpenChange }: Props) {
                     </Dialog.Close>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-1 p-1 mb-4 rounded-lg bg-slate-100 dark:bg-slate-800">
-                    {(['login', 'signup'] as const).map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => {
-                          setTab(t);
-                          setError(null);
-                        }}
-                        className={cn(
-                          'px-3 py-1.5 rounded-md text-sm font-semibold transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50',
-                          tab === t
-                            ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
-                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
-                        )}
-                      >
-                        {t === 'login' ? 'Log in' : 'Sign up'}
-                      </button>
-                    ))}
-                  </div>
+                  {signupsDisabled ? (
+                    <p role="status" className="mb-4 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 text-center">
+                      New signups are disabled on this server. Log in with your existing account.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-1 p-1 mb-4 rounded-lg bg-slate-100 dark:bg-slate-800">
+                      {(['login', 'signup'] as const).map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => {
+                            setTab(t);
+                            setError(null);
+                          }}
+                          className={cn(
+                            'px-3 py-1.5 rounded-md text-sm font-semibold transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50',
+                            tab === t
+                              ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+                          )}
+                        >
+                          {t === 'login' ? 'Log in' : 'Sign up'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                     {tab === 'signup' && (

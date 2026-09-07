@@ -9,6 +9,7 @@ import {
   deleteSession,
   getSessionToken,
   setSessionCookie,
+  signupsDisabled,
   type AuthedUser,
 } from '../auth/session.ts';
 import { requireAuth } from '../auth/middleware.ts';
@@ -25,7 +26,11 @@ function invalidInput(c: any, fields: Record<string, string>) {
 }
 
 export const authRoutes = new Hono<{ Variables: AuthVars }>()
+  .get('/config', async (c) => {
+    return c.json({ signupsDisabled: signupsDisabled(c) }, 200);
+  })
   .post('/signup', async (c) => {
+    if (signupsDisabled(c)) return c.json({ error: 'signups_disabled' }, 403);
     const db = c.get('db');
     let body: { email?: unknown; password?: unknown; name?: unknown };
     try {

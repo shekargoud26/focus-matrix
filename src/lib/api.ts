@@ -71,6 +71,7 @@ export interface AuthUser {
 }
 
 export const api = {
+  config: () => req<{ signupsDisabled: boolean }>('/api/auth/config'),
   signup: (input: { email: string; password: string; name: string }) =>
     req<AuthUser>('/api/auth/signup', { method: 'POST', body: JSON.stringify(input) }),
   login: (input: { email: string; password: string }) =>

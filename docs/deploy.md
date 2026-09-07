@@ -50,6 +50,18 @@ Without a resolvable binding, `/api/*` returns
 `503 {error:'database_not_configured'}`.
 Redeploy after setup (Retry deployment) so the Function picks it up.
 
+### Closing registration
+
+Set `DISABLE_SIGNUPS=true` to return `403 {error:'signups_disabled'}` on
+`POST /api/auth/signup` — existing users can still log in. Sources checked
+in order: worker/pages env binding, then `process.env` (VPS/Docker):
+
+- VPS/Docker: `DISABLE_SIGNUPS=true` in the environment.
+- Cloudflare: `[vars] DISABLE_SIGNUPS = "true"` in the wrangler file or a
+  dashboard variable of the same name.
+- The login modal hides the signup tab automatically via
+  `GET /api/auth/config`.
+
 ### Workers + D1 (API + frontend static assets in one Worker)
 
 ```bash

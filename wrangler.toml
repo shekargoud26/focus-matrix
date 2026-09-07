@@ -10,3 +10,8 @@ binding = "DB"
 database_name = "focus-matrix"
 database_id = "placeholder-replace-with-wrangler-d1-create-id"
 migrations_dir = "drizzle"
+
+# Uncomment to close registration (login still works). Dashboard variable
+# of the same name is the alternative — use one method, not both.
+# [vars]
+# DISABLE_SIGNUPS = "true"

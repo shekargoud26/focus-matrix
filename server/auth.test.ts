@@ -74,6 +74,84 @@ describe('auth (US-1–7)', () => {
     expect(after.status).toBe(401);
   });
 
+  it('DISABLE_SIGNUPS closes registration but login still works', async () => {
+    const { app } = createTestApp();
+    const env = { DISABLE_SIGNUPS: 'true' };
+
+    const config = (await (
+      await app.request('/api/auth/config', { headers: J }, env)
+    ).json()) as { signupsDisabled: boolean };
+    expect(config).toEqual({ signupsDisabled: true });
+
+    const blocked = await app.request(
+      '/api/auth/signup',
+      { method: 'POST', headers: J, body: JSON.stringify({ email: 'new@test.com', password: 'password123', name: 'New' }) },
+      env,
+    );
+    expect(blocked.status).toBe(403);
+    expect(await blocked.json()).toEqual({ error: 'signups_disabled' });
+
+    // Gate runs before validation: garbage body is still 403, not 400.
+    const blockedInvalid = await app.request(
+      '/api/auth/signup',
+      { method: 'POST', headers: J, body: 'not-json' },
+      env,
+    );
+    expect(blockedInvalid.status).toBe(403);
+
+    // Pre-existing user can still log in, use /me and log out.
+    await signupUser(app, { email: 'old@test.com', password: 'password123' });
+    const login = await app.request(
+      '/api/auth/login',
+      { method: 'POST', headers: J, body: JSON.stringify({ email: 'old@test.com', password: 'password123' }) },
+      env,
+    );
+    expect(login.status).toBe(200);
+    const cookie = (login.headers.get('set-cookie') ?? '').match(/session=[^;]*/)?.[0] ?? '';
+    expect((await app.request('/api/auth/me', { headers: { cookie } }, env)).status).toBe(200);
+    expect((await app.request('/api/auth/logout', { method: 'POST', headers: { cookie } }, env)).status).toBe(200);
+  });
+
+  it('DISABLE_SIGNUPS reads process.env fallback and truthy variants', async () => {
+    const { app } = createTestApp();
+    const saved = process.env.DISABLE_SIGNUPS;
+    try {
+      for (const v of ['1', 'yes', 'TRUE']) {
+        process.env.DISABLE_SIGNUPS = v;
+        const res = await app.request('/api/auth/signup', {
+          method: 'POST',
+          headers: J,
+          body: JSON.stringify({ email: `x-${v}@test.com`, password: 'password123', name: 'X' }),
+        });
+        expect(res.status).toBe(403);
+      }
+      // Binding takes precedence over process.env: binding 'false' wins
+      // even when the process env says 'true'.
+      process.env.DISABLE_SIGNUPS = 'true';
+      const open = await app.request(
+        '/api/auth/signup',
+        { method: 'POST', headers: J, body: JSON.stringify({ email: 'open@test.com', password: 'password123', name: 'Open' }) },
+        { DISABLE_SIGNUPS: 'false' },
+      );
+      expect(open.status).toBe(201);
+    } finally {
+      if (saved === undefined) delete process.env.DISABLE_SIGNUPS;
+      else process.env.DISABLE_SIGNUPS = saved;
+    }
+  });
+
+  it('/api/auth/config reports open by default', async () => {
+    const saved = process.env.DISABLE_SIGNUPS;
+    delete process.env.DISABLE_SIGNUPS;
+    try {
+      const { app } = createTestApp();
+      const config = (await (await app.request('/api/auth/config')).json()) as { signupsDisabled: boolean };
+      expect(config).toEqual({ signupsDisabled: false });
+    } finally {
+      if (saved !== undefined) process.env.DISABLE_SIGNUPS = saved;
+    }
+  });
+
   it('validation → 400 invalid_input; short password rejected', async () => {
     const { app } = createTestApp();
     const res = await app.request('/api/auth/signup', {
