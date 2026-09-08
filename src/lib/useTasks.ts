@@ -22,6 +22,24 @@ function randomId(): string {
   return Math.random().toString(36).substring(2, 11);
 }
 
+function sameContent(a: Task, b: Task): boolean {
+  return (
+    a.title.trim() === b.title.trim() &&
+    (a.description ?? '') === (b.description ?? '') &&
+    a.quadrantId === b.quadrantId
+  );
+}
+
+/** Push one local/backup task to the server, preserving flags/dates the create endpoint can't set. */
+async function pushTaskToServer(t: Task): Promise<Task> {
+  const srv = toClient(await api.createTask({ title: t.title, description: t.description, quadrantId: t.quadrantId }));
+  const patch: Record<string, unknown> = {};
+  if (t.completed) patch.completed = true;
+  if (t.starred) patch.starred = true;
+  if (t.closedAt) patch.closedAt = t.closedAt;
+  return Object.keys(patch).length > 0 ? toClient(await api.updateTask(srv.id, patch as never)) : srv;
+}
+
 /**
  * Task state with server sync. Guest mode is byte-identical to the legacy
  * App.tsx behavior (localStorage). Authed mode treats the server as truth
@@ -48,7 +66,8 @@ export function useTasks(mode: AuthMode) {
     }
   }, [tasks]);
 
-  // Authed: fetch server truth; one-time migrate real guest tasks if empty.
+  // Authed: fetch server truth, then merge any local guest tasks up to the
+  // server (never drops local work when the server is non-empty).
   useEffect(() => {
     if (mode !== 'authed') {
       // Back to guest → restore the untouched guest cache.
@@ -62,17 +81,25 @@ export function useTasks(mode: AuthMode) {
     (async () => {
       try {
         let server = (await api.listTasks()).map(toClient);
-        if (!migratedRef.current && server.length === 0) {
+        if (!migratedRef.current) {
           migratedRef.current = true;
-          const carry = loadGuestTasks().filter((t) => !isSeedTask(t) && !t.completed);
-          for (const t of carry) {
+          // Real user tasks only — never push demo seeds.
+          const carry = loadGuestTasks().filter((t) => !isSeedTask(t));
+          // Skip tasks already on the server (by id or by content) so a
+          // reload/re-login doesn't create duplicates.
+          const missing = carry.filter(
+            (l) => !server.some((s) => s.id === l.id || sameContent(s, l)),
+          );
+          let pushed = 0;
+          for (const t of missing) {
             try {
-              await api.createTask({ title: t.title, description: t.description, quadrantId: t.quadrantId });
+              await pushTaskToServer(t);
+              pushed += 1;
             } catch {
               // keep going; user keeps local copies in guest key
             }
           }
-          if (carry.length > 0) server = (await api.listTasks()).map(toClient);
+          if (pushed > 0) server = (await api.listTasks()).map(toClient);
         }
         if (cancelled) return;
         setTasks(server);
@@ -208,7 +235,7 @@ export function useTasks(mode: AuthMode) {
     [mutate],
   );
 
-  /** Restore tasks from a backup file. Merges by id (never deletes). Returns imported count. */
+  /** Restore tasks from a backup file. Authed → pushes to the DB; guest → localStorage. Merges by id (never deletes). Returns imported count. */
   const importTasks = useCallback(async (incoming: Task[]): Promise<number> => {
     const fresh = incoming.filter((t) => !tasksRef.current.some((e) => e.id === t.id));
     if (fresh.length === 0) return 0;
@@ -216,18 +243,30 @@ export function useTasks(mode: AuthMode) {
       setTasks((prev) => [...fresh, ...prev]);
       return fresh.length;
     }
-    // Authed: persist each missing task, then converge with returned ids.
+    // Authed: persist each missing task to the server, then converge with
+    // returned ids. Per-task try/catch so one bad row doesn't drop the rest.
     const created: Task[] = [];
     for (const t of fresh) {
-      const srv = toClient(await api.createTask({ title: t.title, description: t.description, quadrantId: t.quadrantId }));
-      const patch: Record<string, unknown> = {};
-      if (t.completed) patch.completed = true;
-      if (t.starred) patch.starred = true;
-      if (t.closedAt) patch.closedAt = t.closedAt;
-      const final = Object.keys(patch).length > 0 ? toClient(await api.updateTask(srv.id, patch as never)) : srv;
-      created.push(final);
+      try {
+        created.push(await pushTaskToServer(t));
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 401) {
+          notifySessionExpired();
+          break;
+        }
+        // skip bad row, keep going
+      }
     }
-    setTasks((prev) => [...created, ...prev]);
+    if (created.length === 0) throw new Error('Import failed — server rejected every task.');
+    setTasks((prev) => {
+      const next = [...created, ...prev];
+      try {
+        localStorage.setItem(SERVER_CACHE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
     return created.length;
   }, []);
 
