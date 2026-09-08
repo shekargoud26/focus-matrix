@@ -12,6 +12,13 @@ export interface AppEnv {
 /** Portable app factory — no env binding inside, entries inject the db. */
 export function createApp(db: Db): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
+  // Unhandled errors → JSON (not Hono's plain-text default), so edge
+  // crashes surface as mappable API errors instead of opaque bodies that
+  // clients mistake for "API not deployed".
+  app.onError((err, c) => {
+    console.error('unhandled API error', err);
+    return c.json({ error: 'internal' }, 500);
+  });
   app.use('*', async (c, next) => {
     c.set('db', db);
     await next();

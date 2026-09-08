@@ -173,6 +173,25 @@ describe('auth (US-1–7)', () => {
     expect(await verifyPassword('password123', 'garbage')).toBe(false);
   });
 
+  it('hash iteration count stays within the Workers PBKDF2 cap (100k)', async () => {
+    // Cloudflare rejects PBKDF2 counts above 100000 with NotSupportedError,
+    // which turned every signup into an HTTP 500 on Pages/Workers.
+    const iterations = Number((await hashPassword('password123')).split('$')[1]);
+    expect(Number.isInteger(iterations)).toBe(true);
+    expect(iterations).toBeLessThanOrEqual(100_000);
+  });
+
+  it('unhandled route errors → JSON 500 {error:internal}, not plain text', async () => {
+    const { app } = createTestApp();
+    app.get('/api/__boom__', () => {
+      throw new Error('boom');
+    });
+    const res = await app.request('/api/__boom__');
+    expect(res.status).toBe(500);
+    expect(res.headers.get('content-type')).toContain('application/json');
+    expect(await res.json()).toEqual({ error: 'internal' });
+  });
+
   it('authed task routes reject anonymous callers (US-5)', async () => {
     const { app } = createTestApp();
     expect((await app.request('/api/tasks')).status).toBe(401);

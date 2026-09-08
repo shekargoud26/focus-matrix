@@ -18,7 +18,13 @@ function friendlyError(e: unknown, fallback: string): string {
     if (body?.error === 'invalid_credentials') return 'Wrong email or password. Try again.';
     if (body?.error === 'invalid_input') return 'Please check the highlighted fields.';
     if (body?.error === 'signups_disabled') return 'New signups are disabled on this server.';
-    if (body?.error === 'network_unreachable' || body?.error === 'bad_response') {
+    if (body?.error === 'network_unreachable') {
+      return 'Can’t reach the server — the API isn’t deployed yet. You can keep using Focus Matrix offline.';
+    }
+    if (body?.error === 'bad_response') {
+      // Non-JSON reply: SPA fallback HTML (status 200) means the API really
+      // isn't there; a 5xx means the server answered but errored.
+      if (e.status >= 500) return 'Server hiccup — try again in a moment.';
       return 'Can’t reach the server — the API isn’t deployed yet. You can keep using Focus Matrix offline.';
     }
     if (body?.error === 'database_not_configured') {

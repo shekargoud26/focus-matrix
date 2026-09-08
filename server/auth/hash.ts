@@ -1,10 +1,16 @@
 /**
- * Portable password hashing via WebCrypto PBKDF2 (SHA-256, 210k iterations).
+ * Portable password hashing via WebCrypto PBKDF2 (SHA-256, 100k iterations).
  * Uses only `crypto.subtle` + `crypto.getRandomValues` so it runs unmodified
  * on Cloudflare Workers, Node.js, and Bun — no native C bindings.
+ *
+ * NOTE: keep iterations at or below 100_000 — the Workers runtime rejects
+ * PBKDF2 iteration counts above that ("iteration counts above 100000 are
+ * not supported"), which otherwise turns every signup/login-with-hash into
+ * an HTTP 500 on Cloudflare. The count is stored in the hash string, so
+ * `verifyPassword` stays compatible with hashes made at any count.
  */
 
-const ITERATIONS = 210_000;
+const ITERATIONS = 100_000;
 const SALT_BYTES = 16;
 const KEY_BYTES = 32;
 const PREFIX = 'pbkdf2';

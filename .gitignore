@@ -11,3 +11,6 @@ data/*.db*
 *.sqlite*
 *.sqlite-journal
 .wrangler/
+# Local agent skills (per-machine tooling, not part of the repo)
+.agents/
+skills-lock.json
