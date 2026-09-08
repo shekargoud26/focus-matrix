@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Focus Matrix: Eisenhower 2x2 grid -->
+  <!-- Dark slate rounded tile: works on light & dark browser chrome -->
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="#0f172a"/>
+  <!-- Subtle inner ring -->
+  <rect x="4.75" y="4.75" width="118.5" height="118.5" rx="27.25" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="1.5"/>
+  <!-- Q1 Do First: red (urgent + important) -->
+  <rect x="24" y="24" width="36" height="36" rx="10" fill="#ef4444"/>
+  <!-- Q2 Schedule: emerald (important, not urgent) -->
+  <rect x="68" y="24" width="36" height="36" rx="10" fill="#10b981"/>
+  <!-- Q3 Delegate: amber (urgent, not important) -->
+  <rect x="24" y="68" width="36" height="36" rx="10" fill="#f59e0b"/>
+  <!-- Q4 Eliminate: blue (neither) -->
+  <rect x="68" y="68" width="36" height="36" rx="10" fill="#3b82f6"/>
+  <!-- Focus dot: Q1 is the priority -->
+  <circle cx="42" cy="42" r="6" fill="#ffffff" fill-opacity="0.95"/>
+</svg>
