@@ -129,6 +129,18 @@ export function useTasks(mode: AuthMode) {
     };
   }, [mode]);
 
+  // Authed: mirror server truth to the offline cache on every change so a
+  // refresh while offline can't resurrect deleted/edited tasks. Skipped
+  // while the initial sync is still loading so guest tasks never clobber it.
+  useEffect(() => {
+    if (mode !== 'authed' || loading) return;
+    try {
+      localStorage.setItem(SERVER_CACHE_KEY, JSON.stringify(tasks));
+    } catch {
+      // storage full/blocked → keep in-memory
+    }
+  }, [tasks, mode, loading]);
+
   const mutate = useCallback(
     async (optimistic: (prev: Task[]) => Task[], commit: (prev: Task[]) => Promise<unknown>) => {
       if (modeRef.current === 'guest') {

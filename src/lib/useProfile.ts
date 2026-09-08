@@ -82,6 +82,13 @@ export function useProfile(mode: AuthMode) {
         } catch (e) {
           console.warn('profile update failed', e);
         }
+        // Mirror locally even if the server write failed so offline
+        // refresh keeps the latest edit instead of a stale cache.
+        try {
+          localStorage.setItem(SERVER_CACHE_KEY, JSON.stringify(next));
+        } catch {
+          // ignore
+        }
       }
     },
     [mode],
