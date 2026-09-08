@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {
+import React, { useState, useEffect, useMemo } from 'react';import {
   DndContext,
   DragOverlay,
   closestCorners,
@@ -13,8 +12,8 @@ import {
   defaultDropAnimationSideEffects,
   TouchSensor,
 } from '@dnd-kit/core';
-import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { Task, QuadrantId, QUADRANTS } from './types';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { QuadrantId, QUADRANTS } from './types';
 import Quadrant from './components/Quadrant';
 import TaskTicket from './components/TaskTicket';
 import ArchiveDrawer from './components/ArchiveDrawer';
@@ -22,163 +21,40 @@ import InboxDrawer from './components/InboxDrawer';
 import InboxContent from './components/InboxContent';
 import { Routes, Route, Link } from 'react-router-dom';
 import ProfilePage from './pages/ProfilePage';
-import { Moon, Sun, Archive, Grid2X2, Inbox, User } from 'lucide-react';
+import AuthModal from './components/AuthModal';
+import { AuthProvider, useAuth, SESSION_EXPIRED_EVENT } from './lib/auth';
+import { useTasks } from './lib/useTasks';
+import { useProfile } from './lib/useProfile';
+import { Moon, Sun, Archive, Grid2X2, Inbox, User, LogIn, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
-export default function App() {
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    const saved = localStorage.getItem('eisenhower-tasks');
-    if (saved) return JSON.parse(saved);
-    return [
-      {
-        id: 'seed-1',
-        title: 'Review project roadmap 🚀',
-        description: 'Prepare the outline for the upcoming team sync and prioritize milestone releases.',
-        quadrantId: 'q1',
-        completed: false,
-        createdAt: Date.now() - 7200000,
-        starred: true,
-      },
-      {
-        id: 'seed-2',
-        title: 'Schedule weekly planning session 🗓️',
-        description: 'Block 30 minutes on calendar for personal review of goals.',
-        quadrantId: 'q2',
-        completed: false,
-        createdAt: Date.now() - 14400000,
-      },
-      {
-        id: 'seed-3',
-        title: 'Delegate social media graphics 🎨',
-        description: 'Ask Sarah to draft the promo assets for the next launch.',
-        quadrantId: 'q3',
-        completed: false,
-        createdAt: Date.now() - 21600000,
-      },
-      {
-        id: 'seed-4',
-        title: 'Clear out old browser tabs 🛑',
-        description: 'Bookmarked for clean-up but not critical.',
-        quadrantId: 'q4',
-        completed: false,
-        createdAt: Date.now() - 86400000,
-      },
-      {
-        id: 'seed-5',
-        title: 'Review incoming feedback submissions 📥',
-        description: 'Sort through client suggestions and place them in the matrix.',
-        quadrantId: 'inbox',
-        completed: false,
-        createdAt: Date.now() - 3600000,
-      },
-      // Completed tasks for profile activity heatmap
-      {
-        id: 'seed-c1',
-        title: 'Design initial draft of landing page',
-        quadrantId: 'q1',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 1,
-        closedAt: Date.now() - 3600000 * 1,
-      },
-      {
-        id: 'seed-c2',
-        title: 'Refactor state management logic',
-        quadrantId: 'q1',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 1,
-        closedAt: Date.now() - 3600000 * 2,
-      },
-      {
-        id: 'seed-c3',
-        title: 'Setup project ESLint & Prettier config',
-        quadrantId: 'q2',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 2,
-        closedAt: Date.now() - 86400000 * 1 - 3600000 * 3,
-      },
-      {
-        id: 'seed-c4',
-        title: 'Write automated unit tests for drag-and-drop',
-        quadrantId: 'q2',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 2,
-        closedAt: Date.now() - 86400000 * 1 - 3600000 * 4,
-      },
-      {
-        id: 'seed-c5',
-        title: 'Prepare project presentation slides',
-        quadrantId: 'q3',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 3,
-        closedAt: Date.now() - 86400000 * 2 - 3600000 * 1,
-      },
-      {
-        id: 'seed-c6',
-        title: 'Audit application bundle sizes',
-        quadrantId: 'q2',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 5,
-        closedAt: Date.now() - 86400000 * 3 - 3600000 * 2,
-      },
-      {
-        id: 'seed-c7',
-        title: 'Resolve CSS flexbox layout issues on mobile',
-        quadrantId: 'q1',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 5,
-        closedAt: Date.now() - 86400000 * 4 - 3600000 * 5,
-      },
-      {
-        id: 'seed-c8',
-        title: 'Conduct user interview for feedback',
-        quadrantId: 'q3',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 8,
-        closedAt: Date.now() - 86400000 * 5 - 3600000 * 1,
-      },
-      {
-        id: 'seed-c9',
-        title: 'Analyze competitor features list',
-        quadrantId: 'q4',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 10,
-        closedAt: Date.now() - 86400000 * 8 - 3600000 * 6,
-      },
-      {
-        id: 'seed-c10',
-        title: 'Optimize PNG and SVG asset sizes',
-        quadrantId: 'q4',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 15,
-        closedAt: Date.now() - 86400000 * 12 - 3600000 * 2,
-      },
-      {
-        id: 'seed-c11',
-        title: 'Document API endpoints in Markdown',
-        quadrantId: 'q2',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 20,
-        closedAt: Date.now() - 86400000 * 15 - 3600000 * 4,
-      },
-      {
-        id: 'seed-c12',
-        title: 'Fix keyboard focus trapping in modal',
-        quadrantId: 'q1',
-        completed: true,
-        createdAt: Date.now() - 86400000 * 25,
-        closedAt: Date.now() - 86400000 * 20 - 3600000 * 8,
-      }
-    ];
-  });
-  const [profile, setProfile] = useState(() => {
-    const saved = localStorage.getItem('focus-matrix-profile');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return { name: parsed.name || 'Alex Developer', title: parsed.title || 'Productivity Enthusiast' };
-    }
-    return { name: 'Alex Developer', title: 'Productivity Enthusiast' };
-  });
+function MatrixApp() {
+  const { user, mode, logout } = useAuth();
+  const {
+    tasks,
+    loading: tasksLoading,
+    addTask,
+    toggleTask,
+    toggleStar,
+    moveToQuadrant,
+    editTask,
+    updateTaskDate,
+    deleteTask,
+    moveLocal,
+    reorderLocal,
+    commitDrag,
+    importTasks,
+  } = useTasks(mode);
+  const { profile, updateProfile } = useProfile(mode);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+
+  // Expired session → drop to guest + prompt login (US-5).
+  useEffect(() => {
+    const onExpired = () => setIsAuthOpen(true);
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, []);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -191,14 +67,6 @@ export default function App() {
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [zenModeQuadrant, setZenModeQuadrant] = useState<QuadrantId | null>(null);
-
-  useEffect(() => {
-    localStorage.setItem('eisenhower-tasks', JSON.stringify(tasks));
-  }, [tasks]);
-
-  useEffect(() => {
-    localStorage.setItem('focus-matrix-profile', JSON.stringify(profile));
-  }, [profile]);
 
   useEffect(() => {
     localStorage.setItem('focus-matrix-theme', isDarkMode ? 'dark' : 'light');
@@ -228,62 +96,6 @@ export default function App() {
   }, [tasks]);
   const archivedTasks = useMemo(() => tasks.filter(t => t.completed).sort((a, b) => b.createdAt - a.createdAt), [tasks]);
 
-  const addTask = (quadrantId: QuadrantId, title: string, description: string) => {
-    const newTask: Task = {
-      id: Math.random().toString(36).substring(2, 11),
-      title,
-      description,
-      quadrantId,
-      completed: false,
-      createdAt: Date.now(),
-      starred: false,
-    };
-    setTasks(prev => [newTask, ...prev]);
-  };
-
-  const toggleTask = (id: string) => {
-    setTasks(prev => prev.map(t => 
-      t.id === id ? { ...t, completed: !t.completed, closedAt: !t.completed ? Date.now() : undefined } : t
-    ));
-  };
-
-  const toggleStar = (id: string) => {
-    setTasks(prev => prev.map(t => 
-      t.id === id ? { ...t, starred: !t.starred } : t
-    ));
-  };
-
-  const moveToQuadrant = (id: string, quadrantId: QuadrantId) => {
-    setTasks(prev => prev.map(t => 
-      t.id === id ? { ...t, quadrantId } : t
-    ));
-  };
-
-  const editTask = (id: string, title: string, description: string) => {
-    setTasks(prev => prev.map((t) => 
-      t.id === id ? { ...t, title, description } : t
-    ));
-  };
-
-  const updateTaskDate = (id: string, newDate: number) => {
-    setTasks(prev => prev.map((t) => 
-      t.id === id ? { ...t, closedAt: newDate } : t
-    ));
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id));
-  };
-
-  /** Restore tasks from a backup file. Merges by id (never deletes). Returns imported count. */
-  const importTasks = async (incoming: Task[]): Promise<number> => {
-    const ids = new Set(tasks.map(t => t.id));
-    const fresh = incoming.filter(t => !ids.has(t.id));
-    if (fresh.length === 0) return 0;
-    setTasks(prev => [...fresh, ...prev]);
-    return fresh.length;
-  };
-
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string);
   }
@@ -294,49 +106,34 @@ export default function App() {
 
     const overId = over.id as string;
     const activeTask = tasks.find(t => t.id === active.id);
-    
+
     if (!activeTask) return;
 
     const isOverAQuadrant = QUADRANTS.some(q => q.id === overId) || overId === 'inbox';
-    
+
     if (isOverAQuadrant && activeTask.quadrantId !== overId) {
-      setTasks(prev => {
-        const activeIndex = prev.findIndex(t => t.id === active.id);
-        const newTasks = [...prev];
-        newTasks[activeIndex] = { ...activeTask, quadrantId: overId as QuadrantId };
-        return newTasks;
-      });
+      moveLocal(activeTask.id, overId as QuadrantId);
       return;
     }
 
     const overTask = tasks.find(t => t.id === overId);
     if (overTask && activeTask.quadrantId !== overTask.quadrantId) {
-      setTasks(prev => {
-        const activeIndex = prev.findIndex(t => t.id === active.id);
-        const overIndex = prev.findIndex(t => t.id === over.id);
-        const newTasks = [...prev];
-        newTasks[activeIndex] = { ...activeTask, quadrantId: overTask.quadrantId };
-        return arrayMove(newTasks, activeIndex, overIndex);
-      });
+      moveLocal(activeTask.id, overTask.quadrantId);
+      reorderLocal(activeTask.id, overTask.id);
     }
   }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    
+
     if (over && active.id !== over.id) {
-      setTasks((items) => {
-        const oldIndex = items.findIndex((t) => t.id === active.id);
-        const newIndex = items.findIndex((t) => t.id === over.id);
-        
-        if (oldIndex !== -1 && newIndex !== -1) {
-          return arrayMove(items, oldIndex, newIndex);
-        }
-        return items;
-      });
+      reorderLocal(active.id as string, over.id as string);
     }
-    
+
     setActiveId(null);
+    // Flush any drag-time local moves (quadrant + positions) to the server.
+    // No-op in guest mode (already persisted via localStorage).
+    commitDrag().catch((e) => console.warn('drag sync failed', e));
   }
 
   return (
@@ -412,8 +209,36 @@ export default function App() {
               className="p-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 overflow-hidden flex items-center justify-center"
               aria-label="Profile"
             >
-              <User size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+              {user ? (
+                <span className="w-5 h-5 flex items-center justify-center rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              ) : (
+                <User size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+              )}
             </Link>
+            {user ? (
+              <button
+                onClick={() => logout()}
+                className="p-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+                aria-label="Log out"
+              >
+                <LogOut size={20} className="text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsAuthOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+              >
+                <LogIn size={16} />
+                <span className="text-sm font-semibold hidden sm:inline">Log in</span>
+              </button>
+            )}
+            {mode === 'authed' && tasksLoading && (
+              <span className="hidden sm:inline px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                Syncing…
+              </span>
+            )}
           </motion.div>
         </header>
 
@@ -509,9 +334,11 @@ export default function App() {
             </>
           } />
           
-          <Route path="/profile" element={<ProfilePage tasks={tasks} profile={profile} onUpdateProfile={setProfile} onUpdateTaskDate={updateTaskDate} onImportTasks={importTasks} />} />
+          <Route path="/profile" element={<ProfilePage tasks={tasks} profile={profile} onUpdateProfile={updateProfile} onUpdateTaskDate={updateTaskDate} onImportTasks={importTasks} />} />
         </Routes>
       </div>
+
+      <AuthModal open={isAuthOpen} onOpenChange={setIsAuthOpen} />
 
       <InboxDrawer
         isOpen={isInboxOpen}
@@ -534,5 +361,13 @@ export default function App() {
         onUpdateTaskDate={updateTaskDate}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MatrixApp />
+    </AuthProvider>
   );
 }

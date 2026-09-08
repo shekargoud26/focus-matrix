@@ -11,11 +11,15 @@ When asked to modify or add features, **please refer to the following documentat
 - **[Profile & Heatmap (`docs/profile.md`)](docs/profile.md)**: Read this for context on the user profile page, activity heatmap, and profile state persistence.
 - **[Sidebars & Drawers (`docs/sidebar.md`)](docs/sidebar.md)**: Read this when working with the Inbox, Archive, or any mobile-responsive slide-out drawers.
 
+- **[Deploy Targets (`docs/deploy.md`)](docs/deploy.md)**: Read this when touching the backend, database, or deployment. Same Hono handlers run on Cloudflare Workers (D1) and VPS (local SQLite).
+- **[Backend Spec (`docs/portable-backend-auth-spec.md`)](docs/portable-backend-auth-spec.md)**: The portable-backend source of truth (schema, auth, API contract, testing seams).
+
 ## Core Architecture
 
 - **Framework**: React 18+ with Vite and TypeScript.
 - **Routing**: `react-router-dom` (Currently configured with `/` for the Matrix and `/profile` for the User Profile).
-- **Persistence**: Client-side `localStorage` is used for all state (`eisenhower-tasks`, `focus-matrix-profile`, `focus-matrix-theme`).
+- **Backend**: Hono (`server/app.ts` via `createApp(db)`) + Drizzle ORM (SQLite). Dual entries: `server/index.workers.ts` (Cloudflare D1 via `server/db/d1.ts`) and `server/index.node.ts` (VPS local SQLite via `server/db/local.ts`, also serves `./dist`). Route handlers are driver-agnostic — never import `env.DB`, `better-sqlite3`, or `node:*` outside `server/db/local.ts` / `server/db/migrate.ts` / `server/test-utils.ts` (`:memory:` test seam only).
+- **Persistence**: Server SQLite (`users`, `sessions`, `tasks`, `profiles` — see `server/db/schema.ts`) when authed; client-side `localStorage` (`eisenhower-tasks`, `focus-matrix-profile`, `focus-matrix-theme`) as guest fallback / cache.
 - **Drag and Drop**: `@dnd-kit/core` and related packages for the matrix drag-and-drop experience.
 - **Animations**: `motion/react` for layout animations, component mounting/unmounting, and transitions.
 
