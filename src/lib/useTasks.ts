@@ -22,6 +22,21 @@ function randomId(): string {
   return Math.random().toString(36).substring(2, 11);
 }
 
+/** Remove one task id from both localStorage caches (guest stash + server cache). */
+function purgeTaskFromCaches(id: string): void {
+  for (const key of [GUEST_KEY, SERVER_CACHE_KEY]) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const arr = JSON.parse(raw) as { id: string }[];
+      if (!Array.isArray(arr) || !arr.some((t) => t.id === id)) continue;
+      localStorage.setItem(key, JSON.stringify(arr.filter((t) => t.id !== id)));
+    } catch {
+      // corrupted storage → leave it; state stays source of truth
+    }
+  }
+}
+
 function sameContent(a: Task, b: Task): boolean {
   return (
     a.title.trim() === b.title.trim() &&
@@ -239,11 +254,27 @@ export function useTasks(mode: AuthMode) {
   );
 
   const deleteTask = useCallback(
-    (id: string) =>
-      mutate(
+    (id: string) => {
+      // Purge both caches up front so the id can't come back on refresh,
+      // logout (guest stash reload), or re-login (guest → server migration).
+      // The guest persistence effect / authed mirror effect rewrite the
+      // active key from state right after; a rolled-back delete restores
+      // state and the mirror restores the server cache from it.
+      purgeTaskFromCaches(id);
+      return mutate(
         (prev) => prev.filter((t) => t.id !== id),
-        () => api.deleteTask(id),
-      ),
+        async () => {
+          if (modeRef.current !== 'authed') return;
+          try {
+            await api.deleteTask(id);
+          } catch (e) {
+            // Already gone server-side (local-only / seed id) → keep deleted.
+            if (e instanceof ApiError && e.status === 404) return;
+            throw e;
+          }
+        },
+      );
+    },
     [mutate],
   );
 

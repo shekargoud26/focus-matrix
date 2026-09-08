@@ -49,6 +49,21 @@ describe('useTasks guest mode (US-18)', () => {
     expect(result.current.tasks.length).toBeGreaterThan(5);
     expect(result.current.tasks.some((t) => t.id === 'seed-1')).toBe(true);
   });
+
+  it('delete removes the task from state and localStorage', async () => {
+    const fetchSpy = vi.fn(() => Promise.resolve(jsonResponse([])));
+    vi.stubGlobal('fetch', fetchSpy);
+    const { result } = renderHook(() => useTasks('guest'));
+    const victim = result.current.tasks[0].id;
+
+    await act(async () => {
+      await result.current.deleteTask(victim);
+    });
+    expect(result.current.tasks.some((t) => t.id === victim)).toBe(false);
+    const stored = JSON.parse(localStorage.getItem('eisenhower-tasks') ?? '[]') as { id: string }[];
+    expect(stored.some((t) => t.id === victim)).toBe(false);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
 });
 
 describe('useTasks authed mode', () => {
@@ -124,5 +139,58 @@ describe('useTasks authed mode', () => {
     expect(created).toHaveLength(1);
     expect(created[0]).toContain('Mine');
     expect(result.current.tasks.some((t) => t.title === 'Mine')).toBe(true);
+  });
+
+  it('delete removes from DB and purges both localStorage keys', async () => {
+    localStorage.setItem(
+      'eisenhower-tasks',
+      JSON.stringify([{ id: 'srv-1', title: 'Server task', quadrantId: 'q1', completed: false, createdAt: 1 }]),
+    );
+    const deletes: string[] = [];
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+      if (String(url).includes('/api/tasks') && (!init?.method || init.method === 'GET')) {
+        return Promise.resolve(jsonResponse([serverTask()]));
+      }
+      if (init?.method === 'DELETE') {
+        deletes.push(String(url));
+        return Promise.resolve(jsonResponse({ ok: true }));
+      }
+      return Promise.resolve(jsonResponse({ error: 'unexpected' }, 500));
+    }));
+    const { result } = renderHook(() => useTasks('authed'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.deleteTask('srv-1');
+    });
+    expect(deletes.some((u) => u.includes('/api/tasks/srv-1'))).toBe(true);
+    expect(result.current.tasks.some((t) => t.id === 'srv-1')).toBe(false);
+    for (const key of ['eisenhower-tasks', 'eisenhower-tasks-server-cache']) {
+      const stored = JSON.parse(localStorage.getItem(key) ?? '[]') as { id: string }[];
+      expect(stored.some((t) => t.id === 'srv-1')).toBe(false);
+    }
+  });
+
+  it('delete of a local-only id (server 404) stays deleted, no rollback', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+      if (String(url).includes('/api/tasks') && (!init?.method || init.method === 'GET')) {
+        return Promise.resolve(jsonResponse([serverTask({ id: 'local-1', title: 'Mine' })]));
+      }
+      if (init?.method === 'DELETE') {
+        return Promise.resolve(jsonResponse({ error: 'not_found' }, 404));
+      }
+      return Promise.resolve(jsonResponse({ error: 'unexpected' }, 500));
+    }));
+    const { result } = renderHook(() => useTasks('authed'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.deleteTask('local-1');
+    });
+    expect(result.current.tasks.some((t) => t.id === 'local-1')).toBe(false);
+    const cache = JSON.parse(
+      localStorage.getItem('eisenhower-tasks-server-cache') ?? '[]',
+    ) as { id: string }[];
+    expect(cache.some((t) => t.id === 'local-1')).toBe(false);
   });
 });
